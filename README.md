@@ -2,9 +2,10 @@
 
 A commissioner-style women's college volleyball dynasty. It's 2030: the NCAA
 has collapsed and the **Association of American Universities** runs college
-athletics. This dynasty covers **every AAU member with women's volleyball**,
-72 programs from every level (57 from NCAA Division I, 13 from Division III
-and the two Canadian members from U SPORTS): set-by-set scores, standings, the RPI, a voters' poll,
+athletics. This dynasty covers **all 73 AAU members**,
+from every level (57 from NCAA Division I, 13 from Division III,
+the two Canadian members from U SPORTS, and Boston University, which starts a
+program): set-by-set scores, standings, the RPI, a voters' poll,
 conference play, the NCAA tournament through the Final Four, coaches, the
 offseason and a record book.
 
@@ -18,29 +19,32 @@ device.
 
 ## The league
 
-72 schools, starting in the conferences they play volleyball in today. You
-change that: move any team on its page (then **Settings → Rebuild schedule**
-before the first match) or in the offseason, add conferences and teams, or
-make a team independent.
+73 schools. Four conferences are the commissioner's own, each with a logo
+drawn for this dynasty (transparent backgrounds, in `img/conf/`; redraw them
+with `python3 tools/conf_logos.py`). Everyone else starts in the conference
+they play volleyball in today. You change that: move any team on its page
+(then **Settings → Rebuild schedule** before the first match) or in the
+offseason, add conferences and teams, or make a team independent.
 
 | Conference | Teams |
 |---|---|
-| Big Ten | Illinois, Indiana, Iowa, Maryland, Michigan, Michigan State, Minnesota, Northwestern, Ohio State, Oregon, Penn State, Purdue, Rutgers, UCLA, USC, Washington, Wisconsin |
-| ACC | California, Duke, Georgia Tech, Miami, North Carolina, Notre Dame, Pittsburgh, Stanford, Virginia |
+| Coastal Athletic Conference (CAC) | Duke, Florida, Georgia Tech, Maryland, Miami, North Carolina, Notre Dame, South Florida, Virginia |
+| Metro Conference | Boston University, Buffalo, George Washington, Georgetown, McGill, Pittsburgh, Rutgers, Stony Brook, Toronto |
+| Southwest Conference (SWC) | Kansas, Missouri, Rice, Texas, Texas A&M, Tulane, UAB, Vanderbilt |
+| UC Athletic Association (UCAA) | Caltech, UC Davis, UC Irvine, UC Riverside, UC San Diego, UC Santa Barbara, UC Santa Cruz |
+| Big Ten | Illinois, Indiana, Iowa, Michigan, Michigan State, Minnesota, Northwestern, Ohio State, Oregon, Penn State, Purdue, UCLA, USC, Washington, Wisconsin |
 | Ivy League | Brown, Columbia, Cornell, Dartmouth, Harvard, Penn, Princeton, Yale |
-| SEC | Florida, Missouri, Texas, Texas A&M, Vanderbilt |
-| Big 12 | Arizona, Arizona State, Colorado, Kansas, Utah |
-| Big West | UC Davis, UC Irvine, UC Riverside, UC San Diego, UC Santa Barbara |
-| American | Rice, South Florida, Tulane, UAB |
 | UAA (Division III) | Brandeis, Carnegie Mellon, Case Western, Chicago, Emory, NYU, Rochester, WashU |
-| Independent | Buffalo, George Washington, Georgetown, Stony Brook (D-I); Caltech, Johns Hopkins, MIT, Tufts, UC Santa Cruz (D-III); McGill, Toronto (Canada) |
+| Big 12 | Arizona, Arizona State, Colorado, Utah |
+| ACC | California, Stanford |
+| Independent | Johns Hopkins, MIT, Tufts (Division III) |
 
-The UAA is the one Division III conference made up entirely of AAU members,
-so it comes over whole. The other Division III and Canadian schools play in
-conferences with no other AAU members (Centennial, NEWMAC, NESCAC, SCIAC,
-C2C, RSEQ, OUA), so they start as independents; build them a conference or
-move them into one whenever you like. Everyone plays in one league: the UAA
-champion takes an automatic bid like any other conference champion.
+Boston University has no volleyball team today; it adds a program for 2030
+(a fictional starting rating of 52 and a made-up coach). The UAA is the one
+Division III conference made up entirely of AAU members, so it comes over
+whole. Johns Hopkins, MIT and Tufts play in conferences with no other AAU
+members, so they start as independents. Everyone plays in one league: every
+conference champion, the UAA's included, takes an automatic bid.
 
 Every team has its real colors, mascot, home arena and city. Head coaches are
 each program's real head coach for the 2026 season (from the schools'

@@ -1,11 +1,12 @@
 // Starting league: every member of the Association of American Universities
 // with a women's volleyball team, in the 2030 season after the AAU took over
-// college athletics: 57 from NCAA Division I, 13 from Division III and the two
-// Canadian members (U SPORTS). Teams start in the conferences they play
-// volleyball in today (realign them in the offseason, or before the first
-// serve from each team page). The UAA is kept whole; the other Division III
-// and Canadian schools play in conferences without other AAU members, so they
-// start as independents. Colors are each school's real colors.
+// college athletics: 57 from NCAA Division I, 13 from Division III, the two
+// Canadian members (U SPORTS), and Boston University, which adds a program.
+// The commissioner's conferences (Coastal Athletic, Metro, Southwest, UC
+// Athletic Association) are set here; every other team starts in the
+// conference it plays volleyball in today (the UAA whole; other Division III
+// schools independent). Realign in the offseason, or before the first serve
+// from each team page. Colors are each school's real colors.
 //
 // Ratings: ATK (attack), SRV (serving and passing) and DEF (blocking and
 // digging), 40–99. Stored internally as off / pit / def. They come from each
@@ -24,15 +25,18 @@
 
 export const START_YEAR = 2030;
 
+// The commissioner's four new AAU conferences carry logos drawn for this
+// dynasty (img/conf/, made by tools/conf_logos.py, transparent backgrounds).
 export const CONFERENCES = {
   'ACC':        { abbr: 'ACC', color: '#013CA6' },
-  'American':   { abbr: 'AAC', color: '#0B2240' },
   'Big 12':     { abbr: 'B12', color: '#B3261E' },
   'Big Ten':    { abbr: 'B1G', color: '#0088CE' },
-  'Big West':   { abbr: 'BW',  color: '#0E7C86' },
+  'Coastal Athletic Conference': { abbr: 'CAC', color: '#3A4A5C', altColor: '#5CC6C2', logo: 'img/conf/cac.svg' },
   'Ivy League': { abbr: 'IVY', color: '#00693E' },
-  'SEC':        { abbr: 'SEC', color: '#1F4A8C' },
+  'Metro Conference': { abbr: 'METRO', color: '#E03A3E', altColor: '#23262D', logo: 'img/conf/metro.svg' },
+  'Southwest Conference': { abbr: 'SWC', color: '#719AE8', altColor: '#F28C38', logo: 'img/conf/swc.svg' },
   'UAA':        { abbr: 'UAA', color: '#4B2E83' },
+  'UC Athletic Association': { abbr: 'UCAA', color: '#0F6E7A', altColor: '#F2C14E', logo: 'img/conf/ucaa.svg' },
 };
 
 // [school, conference, abbr, mascot, color, altColor, OVR]
@@ -41,7 +45,7 @@ const T = [
   ['Illinois', 'Big Ten', 'ILL', 'Fighting Illini', '#13294B', '#E84A27', 74],
   ['Indiana', 'Big Ten', 'IND', 'Hoosiers', '#990000', '#EEEDEB', 83],
   ['Iowa', 'Big Ten', 'IOWA', 'Hawkeyes', '#000000', '#FFCD00', 63],
-  ['Maryland', 'Big Ten', 'MD', 'Terrapins', '#E21833', '#FFD200', 66],
+  ['Maryland', 'Coastal Athletic Conference', 'MD', 'Terrapins', '#E21833', '#FFD200', 66],
   ['Michigan', 'Big Ten', 'MICH', 'Wolverines', '#00274C', '#FFCB05', 77],
   ['Michigan State', 'Big Ten', 'MSU', 'Spartans', '#18453B', '#FFFFFF', 75],
   ['Minnesota', 'Big Ten', 'MINN', 'Golden Gophers', '#7A0019', '#FFCC33', 83],
@@ -50,29 +54,29 @@ const T = [
   ['Oregon', 'Big Ten', 'ORE', 'Ducks', '#154733', '#FEE123', 71],
   ['Penn State', 'Big Ten', 'PSU', 'Nittany Lions', '#041E42', '#FFFFFF', 80],
   ['Purdue', 'Big Ten', 'PUR', 'Boilermakers', '#000000', '#CFB991', 87],
-  ['Rutgers', 'Big Ten', 'RUTG', 'Scarlet Knights', '#CC0033', '#5F6A72', 59],
+  ['Rutgers', 'Metro Conference', 'RUTG', 'Scarlet Knights', '#CC0033', '#5F6A72', 59],
   ['UCLA', 'Big Ten', 'UCLA', 'Bruins', '#2D68C4', '#F2A900', 78],
   ['USC', 'Big Ten', 'USC', 'Trojans', '#990000', '#FFC72C', 82],
   ['Washington', 'Big Ten', 'UW', 'Huskies', '#4B2E83', '#B7A57A', 72],
   ['Wisconsin', 'Big Ten', 'WIS', 'Badgers', '#C5050C', '#FFFFFF', 89],
   ['California', 'ACC', 'CAL', 'Golden Bears', '#003262', '#FDB515', 64],
-  ['Duke', 'ACC', 'DUKE', 'Blue Devils', '#00539B', '#FFFFFF', 67],
-  ['Georgia Tech', 'ACC', 'GT', 'Yellow Jackets', '#003057', '#B3A369', 74],
-  ['Miami', 'ACC', 'MIA', 'Hurricanes', '#005030', '#F47321', 81],
-  ['North Carolina', 'ACC', 'UNC', 'Tar Heels', '#7BAFD4', '#13294B', 79],
-  ['Notre Dame', 'ACC', 'ND', 'Fighting Irish', '#0C2340', '#C99700', 67],
-  ['Pittsburgh', 'ACC', 'PITT', 'Panthers', '#003594', '#FFB81C', 91],
+  ['Duke', 'Coastal Athletic Conference', 'DUKE', 'Blue Devils', '#00539B', '#FFFFFF', 67],
+  ['Georgia Tech', 'Coastal Athletic Conference', 'GT', 'Yellow Jackets', '#003057', '#B3A369', 74],
+  ['Miami', 'Coastal Athletic Conference', 'MIA', 'Hurricanes', '#005030', '#F47321', 81],
+  ['North Carolina', 'Coastal Athletic Conference', 'UNC', 'Tar Heels', '#7BAFD4', '#13294B', 79],
+  ['Notre Dame', 'Coastal Athletic Conference', 'ND', 'Fighting Irish', '#0C2340', '#C99700', 67],
+  ['Pittsburgh', 'Metro Conference', 'PITT', 'Panthers', '#003594', '#FFB81C', 91],
   ['Stanford', 'ACC', 'STAN', 'Cardinal', '#8C1515', '#FFFFFF', 89],
-  ['Virginia', 'ACC', 'UVA', 'Cavaliers', '#232D4B', '#E57200', 63],
-  ['Florida', 'SEC', 'FLA', 'Gators', '#0021A5', '#FA4616', 78],
-  ['Missouri', 'SEC', 'MIZ', 'Tigers', '#000000', '#F1B82D', 67],
-  ['Texas', 'SEC', 'TEX', 'Longhorns', '#BF5700', '#FFFFFF', 92],
-  ['Texas A&M', 'SEC', 'TAMU', 'Aggies', '#500000', '#FFFFFF', 93],
-  ['Vanderbilt', 'SEC', 'VAN', 'Commodores', '#000000', '#CFAE70', 59],
+  ['Virginia', 'Coastal Athletic Conference', 'UVA', 'Cavaliers', '#232D4B', '#E57200', 63],
+  ['Florida', 'Coastal Athletic Conference', 'FLA', 'Gators', '#0021A5', '#FA4616', 78],
+  ['Missouri', 'Southwest Conference', 'MIZ', 'Tigers', '#000000', '#F1B82D', 67],
+  ['Texas', 'Southwest Conference', 'TEX', 'Longhorns', '#BF5700', '#FFFFFF', 92],
+  ['Texas A&M', 'Southwest Conference', 'TAMU', 'Aggies', '#500000', '#FFFFFF', 93],
+  ['Vanderbilt', 'Southwest Conference', 'VAN', 'Commodores', '#000000', '#CFAE70', 59],
   ['Arizona', 'Big 12', 'ARIZ', 'Wildcats', '#0C234B', '#AB0520', 76],
   ['Arizona State', 'Big 12', 'ASU', 'Sun Devils', '#8C1D40', '#FFC627', 86],
   ['Colorado', 'Big 12', 'COLO', 'Buffaloes', '#000000', '#CFB87C', 80],
-  ['Kansas', 'Big 12', 'KU', 'Jayhawks', '#0051BA', '#E8000D', 84],
+  ['Kansas', 'Southwest Conference', 'KU', 'Jayhawks', '#0051BA', '#E8000D', 84],
   ['Utah', 'Big 12', 'UTAH', 'Utes', '#CC0000', '#000000', 73],
   ['Brown', 'Ivy League', 'BRWN', 'Bears', '#4E3629', '#C00404', 53],
   ['Columbia', 'Ivy League', 'CLMB', 'Lions', '#1D4F91', '#9BCBEB', 55],
@@ -82,19 +86,19 @@ const T = [
   ['Penn', 'Ivy League', 'PENN', 'Quakers', '#011F5B', '#990000', 55],
   ['Princeton', 'Ivy League', 'PRIN', 'Tigers', '#E77500', '#000000', 68],
   ['Yale', 'Ivy League', 'YALE', 'Bulldogs', '#00356B', '#FFFFFF', 62],
-  ['UC Davis', 'Big West', 'UCD', 'Aggies', '#022851', '#FFBF00', 61],
-  ['UC Irvine', 'Big West', 'UCI', 'Anteaters', '#0064A4', '#FFD200', 60],
-  ['UC Riverside', 'Big West', 'UCR', 'Highlanders', '#003DA5', '#FFB81C', 53],
-  ['UC San Diego', 'Big West', 'UCSD', 'Tritons', '#182B49', '#C69214', 63],
-  ['UC Santa Barbara', 'Big West', 'UCSB', 'Gauchos', '#003660', '#FEBC11', 64],
-  ['Rice', 'American', 'RICE', 'Owls', '#00205B', '#7C7E7F', 74],
-  ['South Florida', 'American', 'USF', 'Bulls', '#006747', '#CFC493', 75],
-  ['Tulane', 'American', 'TULN', 'Green Wave', '#006747', '#418FDE', 64],
-  ['UAB', 'American', 'UAB', 'Blazers', '#1E6B52', '#F4C300', 65],
-  ['Buffalo', 'Independent', 'BUFF', 'Bulls', '#005BBB', '#FFFFFF', 59],
-  ['George Washington', 'Independent', 'GW', 'Revolutionaries', '#033C5A', '#AA9868', 57],
-  ['Georgetown', 'Independent', 'GTWN', 'Hoyas', '#041E42', '#63666A', 61],
-  ['Stony Brook', 'Independent', 'SBU', 'Seawolves', '#990000', '#16243E', 59],
+  ['UC Davis', 'UC Athletic Association', 'UCD', 'Aggies', '#022851', '#FFBF00', 61],
+  ['UC Irvine', 'UC Athletic Association', 'UCI', 'Anteaters', '#0064A4', '#FFD200', 60],
+  ['UC Riverside', 'UC Athletic Association', 'UCR', 'Highlanders', '#003DA5', '#FFB81C', 53],
+  ['UC San Diego', 'UC Athletic Association', 'UCSD', 'Tritons', '#182B49', '#C69214', 63],
+  ['UC Santa Barbara', 'UC Athletic Association', 'UCSB', 'Gauchos', '#003660', '#FEBC11', 64],
+  ['Rice', 'Southwest Conference', 'RICE', 'Owls', '#00205B', '#7C7E7F', 74],
+  ['South Florida', 'Coastal Athletic Conference', 'USF', 'Bulls', '#006747', '#CFC493', 75],
+  ['Tulane', 'Southwest Conference', 'TULN', 'Green Wave', '#006747', '#418FDE', 64],
+  ['UAB', 'Southwest Conference', 'UAB', 'Blazers', '#1E6B52', '#F4C300', 65],
+  ['Buffalo', 'Metro Conference', 'BUFF', 'Bulls', '#005BBB', '#FFFFFF', 59],
+  ['George Washington', 'Metro Conference', 'GW', 'Revolutionaries', '#033C5A', '#AA9868', 57],
+  ['Georgetown', 'Metro Conference', 'GTWN', 'Hoyas', '#041E42', '#63666A', 61],
+  ['Stony Brook', 'Metro Conference', 'SBU', 'Seawolves', '#990000', '#16243E', 59],
   // Division III: the University Athletic Association
   ['Brandeis', 'UAA', 'BRAN', 'Judges', '#003478', '#FFFFFF', 44],
   ['Carnegie Mellon', 'UAA', 'CMU', 'Tartans', '#C41230', '#6D6E71', 50],
@@ -108,16 +112,20 @@ const T = [
   ['Johns Hopkins', 'Independent', 'JHU', 'Blue Jays', '#002D72', '#68ACE5', 46],
   ['MIT', 'Independent', 'MIT', 'Engineers', '#A31F34', '#8A8B8C', 46],
   ['Tufts', 'Independent', 'TUFT', 'Jumbos', '#3E8EDE', '#002E6D', 49],
-  ['Caltech', 'Independent', 'CIT', 'Beavers', '#FF6C0C', '#333333', 42],
-  ['UC Santa Cruz', 'Independent', 'UCSC', 'Banana Slugs', '#003C6C', '#FDC700', 43],
+  ['Caltech', 'UC Athletic Association', 'CIT', 'Beavers', '#FF6C0C', '#333333', 42],
+  ['UC Santa Cruz', 'UC Athletic Association', 'UCSC', 'Banana Slugs', '#003C6C', '#FDC700', 43],
+  // Boston University has no volleyball team today; the commissioner adds one
+  // for 2030 (a new program: fictional rating and coach).
+  ['Boston University', 'Metro Conference', 'BU', 'Terriers', '#CC0000', '#FFFFFF', 52],
   // Canada (U SPORTS: RSEQ and OUA)
-  ['McGill', 'Independent', 'MCG', 'Martlets', '#ED1B2F', '#FFFFFF', 45],
-  ['Toronto', 'Independent', 'TOR', 'Varsity Blues', '#1E3765', '#FFFFFF', 48],
+  ['McGill', 'Metro Conference', 'MCG', 'Martlets', '#ED1B2F', '#FFFFFF', 45],
+  ['Toronto', 'Metro Conference', 'TOR', 'Varsity Blues', '#1E3765', '#FFFFFF', 48],
 ];
 
 // Home arenas: [arena, city]. Every one can be edited on the team page.
 export const SITES = {
   'Arizona': ['McKale Center', 'Tucson, Ariz.'],
+  'Boston University': ['Case Gym', 'Boston, Mass.'],
   'Brandeis': ['Red Auerbach Arena', 'Waltham, Mass.'],
   'Caltech': ['Braun Athletic Center', 'Pasadena, Calif.'],
   'Carnegie Mellon': ['Skibo Gymnasium', 'Pittsburgh, Pa.'],
@@ -197,7 +205,8 @@ export const LOGO_ALIASES = { 'Penn': 'Pennsylvania', 'Miami': 'Miami', 'UC Sant
 // Head coaches: each program's real head coach for the 2026 season (school
 // athletics sites, checked October 2026). USC's Brad Keller has been on leave
 // since October 2026 (Megan Moenoa is interim). By 2030 some will have moved
-// on; rename anyone on the Coaches page.
+// on; rename anyone on the Coaches page. Boston University's program is new,
+// so its coach is a made-up name.
 export const COACHES = {
   "Illinois": "Chris Tamas",
   "Indiana": "Steve Aird",
@@ -271,6 +280,7 @@ export const COACHES = {
   "UC Santa Cruz": "Chad Koenegstein",
   "McGill": "Marie-Christine Lapointe",
   "Toronto": "Kristine Drakich",
+  "Boston University": "Lauren Whitcomb",
 };
 
 function hashName(s) { let h = 2166136261; for (const c of s) h = Math.imul(h ^ c.charCodeAt(0), 16777619) >>> 0; return h; }

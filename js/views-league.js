@@ -1,17 +1,17 @@
 // League pages: teams, team profiles, conferences, history, settings.
 
-import { ctx, S, app, modal, $, $$, esc, toast, changed, persist, flushSave, cache, team, teamInfo, logoImg, teamOptions, teamHref, confLogo, confHref, confInfo, confColor, imageFileToDataUrl, readableOn, openGame, resultText } from './ui.js?v=20261031135021';
-import { isFinal, winnerOf, records, rpi, confStandings, regSeasonChamp, regSeasonChamps, isIndependent } from './standings.js?v=20261031135021';
-import { ovr } from './sim.js?v=20261031135021';
-import { latestPoll, pollRankMap, pollSizeOf, POLL_SIZES, DEFAULT_POLL_SIZE } from './polls.js?v=20261031135021';
-import { addTeam, removeTeam, renameTeam, addConference, renameConference, deleteConference, rebuildSchedule, startNextSeason, weekName, newLeague, beginOffseason, draftRemoveTeam, draftRestoreTeam, draftWarnings, coachName, coachSchool, hireCoach, newCoach, availableCoaches, backfillHitsErrors, placeRemaining, clearPoints, pointsLeft, migrateLeague, syncCoachBonus, devTotal, coachResumes, coachPrestige, prestigeLabel, coachBonus, programPrestiges, programLabel, fitLabel } from './league.js?v=20261031135021';
-import { hotSeat, HEAT } from './hotseat.js?v=20261031135021';
-import { setRating } from './ratings.js?v=20261031135021';
-import { confFormatName, postseasonFinish, postseasonDetail, postseasonRecord, wsTeams, postWeeks, regWeeksOf, ncaaConfig, ncaaProblems, fieldSize, hasSupers, formatSummary, proposeField, DEFAULT_NCAA, mcwsVenue, allEvents, gameVenue } from './postseason.js?v=20261031135021';
-import { DEFAULT_TOURNEY_WEEKS, DEFAULT_REG_WEEKS, DEFAULT_CONF_MATCHES, DEFAULT_MAX_MATCHES } from './schedule.js?v=20261031135021';
-import { exportLeague, clearLeague } from './store.js?v=20261031135021';
-import { clamp, fmtPct } from './util.js?v=20261031135021';
-import { recordBook, teamPollHistory, headToHead } from './records.js?v=20261031135021';
+import { ctx, S, app, modal, $, $$, esc, toast, changed, persist, flushSave, cache, team, teamInfo, logoImg, teamOptions, teamHref, confLogo, confHref, confInfo, confColor, imageFileToDataUrl, readableOn, openGame, resultText } from './ui.js?v=20261031140807';
+import { isFinal, winnerOf, records, rpi, confStandings, regSeasonChamp, regSeasonChamps, isIndependent } from './standings.js?v=20261031140807';
+import { ovr } from './sim.js?v=20261031140807';
+import { latestPoll, pollRankMap, pollSizeOf, POLL_SIZES, DEFAULT_POLL_SIZE } from './polls.js?v=20261031140807';
+import { addTeam, removeTeam, renameTeam, addConference, renameConference, deleteConference, rebuildSchedule, startNextSeason, weekName, newLeague, beginOffseason, draftRemoveTeam, draftRestoreTeam, draftWarnings, coachName, coachSchool, hireCoach, newCoach, availableCoaches, backfillHitsErrors, placeRemaining, clearPoints, pointsLeft, migrateLeague, syncCoachBonus, devTotal, coachResumes, coachPrestige, prestigeLabel, coachBonus, programPrestiges, programLabel, fitLabel } from './league.js?v=20261031140807';
+import { hotSeat, HEAT } from './hotseat.js?v=20261031140807';
+import { setRating } from './ratings.js?v=20261031140807';
+import { confFormatName, postseasonFinish, postseasonDetail, postseasonRecord, wsTeams, postWeeks, regWeeksOf, ncaaConfig, ncaaProblems, fieldSize, hasSupers, formatSummary, proposeField, DEFAULT_NCAA, mcwsVenue, allEvents, gameVenue } from './postseason.js?v=20261031140807';
+import { DEFAULT_TOURNEY_WEEKS, DEFAULT_REG_WEEKS, DEFAULT_CONF_MATCHES, DEFAULT_MAX_MATCHES } from './schedule.js?v=20261031140807';
+import { exportLeague, clearLeague } from './store.js?v=20261031140807';
+import { clamp, fmtPct } from './util.js?v=20261031140807';
+import { recordBook, teamPollHistory, headToHead } from './records.js?v=20261031140807';
 
 const ui = { confFilter: '', ncaaDraft: null, teamSort: { k: 'ovr', dir: -1 }, coachSort: { k: 'now', dir: -1 }, teamTab: 'season', h2hSort: { k: 'g', dir: -1 }, h2hFilter: 'all', memberSort: { k: 'titles', dir: -1 } };
 
@@ -786,7 +786,7 @@ export function renderConferences() {
       const avg = ts.length ? Math.round(ts.reduce((a, t) => a + ovr(t), 0) / ts.length) : '—';
       const st = ts.length ? confStandings(s, c, records(s, g => g.type === 'regular')) : [];
       const ch = s.post?.confT?.[c]?.champion;
-      return `<a class="card conf-card" href="${confHref(c)}"><div class="row">${confLogo(c, 44)}<div><h2 style="margin:0">${esc(c)}</h2><div class="muted small">${ts.length} teams · avg OVR ${avg}</div></div></div>
+      return `<a class="card conf-card" href="${confHref(c)}"><div class="row" style="flex-wrap:nowrap">${confLogo(c, 44)}<div style="min-width:0"><h2 style="margin:0">${esc(c)}</h2><div class="muted small">${ts.length} teams · avg OVR ${avg}</div></div></div>
         <div class="small" style="margin-top:10px">${st[0] && st[0].cw + st[0].cl ? `Leader: <b>${esc(st[0].team)}</b> ${st[0].cw}-${st[0].cl}` : 'No conference matches yet'}${ch ? ` · Tournament champion: <b>${esc(ch)}</b>` : ''}</div></a>`;
     }).join('')}</div>`;
   $('#c-add').onclick = () => conferenceForm();
