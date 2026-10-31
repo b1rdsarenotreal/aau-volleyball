@@ -1,17 +1,17 @@
 // League pages: teams, team profiles, conferences, history, settings.
 
-import { ctx, S, app, modal, $, $$, esc, toast, changed, persist, flushSave, cache, team, teamInfo, logoImg, teamOptions, teamHref, confLogo, confHref, confInfo, confColor, imageFileToDataUrl, readableOn, openGame, resultText } from './ui.js?v=20261031141245';
-import { isFinal, winnerOf, records, rpi, confStandings, regSeasonChamp, regSeasonChamps, isIndependent } from './standings.js?v=20261031141245';
-import { ovr } from './sim.js?v=20261031141245';
-import { latestPoll, pollRankMap, pollSizeOf, POLL_SIZES, DEFAULT_POLL_SIZE } from './polls.js?v=20261031141245';
-import { addTeam, removeTeam, renameTeam, addConference, renameConference, deleteConference, rebuildSchedule, startNextSeason, weekName, newLeague, beginOffseason, draftRemoveTeam, draftRestoreTeam, draftWarnings, coachName, coachSchool, hireCoach, newCoach, availableCoaches, backfillHitsErrors, placeRemaining, clearPoints, pointsLeft, migrateLeague, syncCoachBonus, devTotal, coachResumes, coachPrestige, prestigeLabel, coachBonus, programPrestiges, programLabel, fitLabel } from './league.js?v=20261031141245';
-import { hotSeat, HEAT } from './hotseat.js?v=20261031141245';
-import { setRating } from './ratings.js?v=20261031141245';
-import { confFormatName, postseasonFinish, postseasonDetail, postseasonRecord, wsTeams, postWeeks, regWeeksOf, ncaaConfig, ncaaProblems, fieldSize, hasSupers, formatSummary, proposeField, DEFAULT_NCAA, mcwsVenue, allEvents, gameVenue } from './postseason.js?v=20261031141245';
-import { DEFAULT_TOURNEY_WEEKS, DEFAULT_REG_WEEKS, DEFAULT_CONF_MATCHES, DEFAULT_MAX_MATCHES } from './schedule.js?v=20261031141245';
-import { exportLeague, clearLeague } from './store.js?v=20261031141245';
-import { clamp, fmtPct } from './util.js?v=20261031141245';
-import { recordBook, teamPollHistory, headToHead } from './records.js?v=20261031141245';
+import { ctx, S, app, modal, $, $$, esc, toast, changed, persist, flushSave, cache, team, teamInfo, logoImg, teamOptions, teamHref, confLogo, confHref, confInfo, confColor, imageFileToDataUrl, readableOn, openGame, resultText } from './ui.js?v=20261031141934';
+import { isFinal, winnerOf, records, rpi, confStandings, regSeasonChamp, regSeasonChamps, isIndependent } from './standings.js?v=20261031141934';
+import { ovr } from './sim.js?v=20261031141934';
+import { latestPoll, pollRankMap, pollSizeOf, POLL_SIZES, DEFAULT_POLL_SIZE } from './polls.js?v=20261031141934';
+import { addTeam, removeTeam, renameTeam, addConference, renameConference, deleteConference, rebuildSchedule, startNextSeason, weekName, newLeague, beginOffseason, draftRemoveTeam, draftRestoreTeam, draftWarnings, coachName, coachSchool, hireCoach, newCoach, availableCoaches, backfillHitsErrors, placeRemaining, clearPoints, pointsLeft, migrateLeague, applyAlignment, canApplyAlignment, syncCoachBonus, devTotal, coachResumes, coachPrestige, prestigeLabel, coachBonus, programPrestiges, programLabel, fitLabel } from './league.js?v=20261031141934';
+import { hotSeat, HEAT } from './hotseat.js?v=20261031141934';
+import { setRating } from './ratings.js?v=20261031141934';
+import { confFormatName, postseasonFinish, postseasonDetail, postseasonRecord, wsTeams, postWeeks, regWeeksOf, ncaaConfig, ncaaProblems, fieldSize, hasSupers, formatSummary, proposeField, DEFAULT_NCAA, mcwsVenue, allEvents, gameVenue } from './postseason.js?v=20261031141934';
+import { DEFAULT_TOURNEY_WEEKS, DEFAULT_REG_WEEKS, DEFAULT_CONF_MATCHES, DEFAULT_MAX_MATCHES } from './schedule.js?v=20261031141934';
+import { exportLeague, clearLeague } from './store.js?v=20261031141934';
+import { clamp, fmtPct } from './util.js?v=20261031141934';
+import { recordBook, teamPollHistory, headToHead } from './records.js?v=20261031141934';
 
 const ui = { confFilter: '', ncaaDraft: null, teamSort: { k: 'ovr', dir: -1 }, coachSort: { k: 'now', dir: -1 }, teamTab: 'season', h2hSort: { k: 'g', dir: -1 }, h2hFilter: 'all', memberSort: { k: 'titles', dir: -1 } };
 
@@ -961,6 +961,8 @@ export function renderSettings() {
           <p class="small muted">${s.phase === 'complete' ? 'Add teams and conferences, realign, update coaches, then start the new season. The final poll seeds the new preseason poll.' : 'Opens once the national champion is crowned.'}</p>` : `<p class="muted">You're viewing a past season. Switch to ${L.currentYear} at the top to start a new one.</p>`}
         <button class="btn" id="s-rebuild" ${canRebuild ? '' : 'disabled'}>Rebuild ${s.year} schedule</button>
         <p class="small muted">${canRebuild ? 'Makes a new regular-season schedule from the current teams and conferences. Use it after moving teams between conferences before the first match.' : 'Locked: regular-season matches have been played.'}</p>
+        <button class="btn" id="s-align" ${isCurrent && canApplyAlignment(L) ? '' : 'disabled'}>Use the commissioner's conferences</button>
+        <p class="small muted">${isCurrent && canApplyAlignment(L) ? 'Puts every team in the eight starting conferences (Big Ten, Coastal Atlantic, Ivy League, Metro, Pacific-10, Southwest, UC Athletic Association, University Athletic Association) and rebuilds the schedule.' : 'Only before the first match of the season.'}</p>
       </div>
       <div class="card stack"><h2>Schedule format</h2>
         <label class="field">Regular-season weeks <input type="number" id="s-weeks" min="8" max="16" value="${cs.regWeeks ?? DEFAULT_REG_WEEKS}"></label>
@@ -1018,6 +1020,11 @@ export function renderSettings() {
     if (!confirm(`Replace the ${s.year} regular-season schedule with a new one?`)) return;
     try { rebuildSchedule(s, L.seasons[s.year - 1] || null); } catch (e) { return toast(e.message, true); }
     changed(); toast('New schedule built.');
+  };
+  $('#s-align').onclick = () => {
+    if (!confirm(`Put every team in the commissioner's eight conferences and rebuild the ${s.year} schedule?`)) return;
+    try { applyAlignment(L); } catch (e) { return toast(e.message, true); }
+    changed(); toast('Conferences set and a new schedule built.');
   };
   $('#s-export').onclick = () => exportLeague(L);
   $('#s-import').onchange = async e => {

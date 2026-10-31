@@ -1,6 +1,6 @@
 // Logic tests: run with `node tests/logic.test.mjs`
 import assert from 'node:assert/strict';
-import { newLeague, currentSeason, simGames, startNextSeason, beginOffseason, draftWarnings, applyResult, estimateHE, migrateLeague, addConference, rebuildSchedule, weekName } from '../js/league.js';
+import { ALIGNMENT, newLeague, currentSeason, simGames, startNextSeason, beginOffseason, draftWarnings, applyResult, estimateHE, migrateLeague, addConference, rebuildSchedule, weekName } from '../js/league.js';
 import { simulateGame, winProbability, simulatedWinRate, ovr } from '../js/sim.js';
 import { generateSchedule, confRounds, confSeriesCounts, eventSizes, confTarget, DEFAULT_REG_WEEKS } from '../js/schedule.js';
 import { records, rpi, confStandings, isFinal, winnerOf, INDEPENDENT } from '../js/standings.js';
@@ -29,6 +29,28 @@ check('72 AAU volleyball programs in the commissioner\'s conferences', () => {
   for (const t of Object.values(teams)) assert.ok(Math.abs(ovr(t) - (t.off * 0.4 + t.pit * 0.3 + t.def * 0.3)) < 1);
   const s = splitOvr('Texas', 90);
   assert.ok(Math.abs(0.4 * s.off + 0.3 * s.pit + 0.3 * s.def - 90) <= 0.5);
+});
+
+check('an unstarted saved dynasty picks up the commissioner\'s conferences', () => {
+  const L = newLeague(), s0 = currentSeason(L);
+  // An older save: the old conferences, Boston University, a missing team.
+  delete L.alignment;
+  L.conferences.SEC = { abbr: 'SEC', color: '#1F4A8C' }; L.conferences.ACC = { abbr: 'ACC', color: '#013CA6' };
+  s0.teams.Texas.conference = 'SEC'; s0.teams.Stanford.conference = 'ACC';
+  s0.teams['Boston University'] = { ...s0.teams.Harvard, school: 'Boston University', conference: 'ACC' };
+  delete s0.teams.Caltech;
+  migrateLeague(L);
+  assert.equal(L.alignment, ALIGNMENT);
+  assert.equal(s0.teams.Texas.conference, 'Southwest Conference');
+  assert.equal(s0.teams.Stanford.conference, 'Pacific-10 Conference');
+  assert.ok(!s0.teams['Boston University'] && s0.teams.Caltech?.coachId);
+  assert.ok(!L.conferences.SEC && !L.conferences.ACC && L.conferences['Metro Conference'].logo);
+  assert.ok(s0.games.every(g => g.home !== 'Boston University' && g.away !== 'Boston University'));
+  // Not once matches are played.
+  const L2 = newLeague(); delete L2.alignment; const s2 = currentSeason(L2);
+  simGames(s2, g => g.week === 1, { max: 1 });
+  s2.teams.Texas.conference = 'Big Ten'; migrateLeague(L2);
+  assert.equal(s2.teams.Texas.conference, 'Big Ten');
 });
 
 check('matches are legal best-of-five volleyball', () => {

@@ -1,14 +1,14 @@
 // League (dynasty) lifecycle: creating the league, saving results,
 // simulating, adding teams and conferences, and rolling into new seasons.
 
-import { START_YEAR, CONFERENCES, COACHES, seedTeams, makeTeam, fillSite } from './data.js?v=20261031141245';
-import { generateSchedule, blankGame, DAY_ORDER, DEFAULT_REG_WEEKS, DEFAULT_TOURNEY_WEEKS, DEFAULT_CONF_MATCHES, DEFAULT_MAX_MATCHES, PER_WEEK, confWeeksFor, confWeeksMax, confRounds, confSeriesCounts, confTarget } from './schedule.js?v=20261031141245';
-import { simulateGame, estimateHitsErrors } from './sim.js?v=20261031141245';
-import { generatePoll, releaseDuePolls } from './polls.js?v=20261031141245';
-import { replayRatings, ensureBase } from './ratings.js?v=20261031141245';
-import { progress, lockField, postWeeks, allEvents, regWeeksOf, DEFAULT_NCAA, pickConfHosts, postseasonFinish, citySiteNames, wsTeams } from './postseason.js?v=20261031141245';
-import { isFinal, records, INDEPENDENT } from './standings.js?v=20261031141245';
-import { rng, normal, clamp, hashStr } from './util.js?v=20261031141245';
+import { START_YEAR, CONFERENCES, COACHES, seedTeams, makeTeam, fillSite } from './data.js?v=20261031141934';
+import { generateSchedule, blankGame, DAY_ORDER, DEFAULT_REG_WEEKS, DEFAULT_TOURNEY_WEEKS, DEFAULT_CONF_MATCHES, DEFAULT_MAX_MATCHES, PER_WEEK, confWeeksFor, confWeeksMax, confRounds, confSeriesCounts, confTarget } from './schedule.js?v=20261031141934';
+import { simulateGame, estimateHitsErrors } from './sim.js?v=20261031141934';
+import { generatePoll, releaseDuePolls } from './polls.js?v=20261031141934';
+import { replayRatings, ensureBase } from './ratings.js?v=20261031141934';
+import { progress, lockField, postWeeks, allEvents, regWeeksOf, DEFAULT_NCAA, pickConfHosts, postseasonFinish, citySiteNames, wsTeams } from './postseason.js?v=20261031141934';
+import { isFinal, records, INDEPENDENT } from './standings.js?v=20261031141934';
+import { rng, normal, clamp, hashStr } from './util.js?v=20261031141934';
 
 export const SCHEMA_VERSION = 4;
 
@@ -36,7 +36,7 @@ export function newLeague({ name = 'AAU Volleyball', year = START_YEAR, teams = 
     schema: SCHEMA_VERSION, name, currentYear: year,
     conferences: JSON.parse(JSON.stringify(conferences)),
     coaches: {}, nextCoachId: 1,
-    seasons: { [year]: season },
+    seasons: { [year]: season }, alignment: ALIGNMENT,
   };
   ensureIndependent(league);
   for (const t of Object.values(teams)) { t.coachId = t.coach ? newCoach(league, t.coach) : null; delete t.coach; }
@@ -243,6 +243,40 @@ export function deleteConference(league, season, name) {
   const usedEarlier = Object.values(league.seasons).some(s => Object.values(s.teams).some(t => t.conference === name));
   if (!usedEarlier) delete league.conferences[name];
   else league.conferences[name].retired = true;
+}
+
+// ---------- the commissioner's conference alignment ----------
+// The starting conferences in data.js. Bump ALIGNMENT when they change: a
+// saved dynasty whose first season hasn't started picks up the new alignment
+// when it loads (teams move, missing teams join, empty old conferences go,
+// and the schedule is rebuilt). Settings can apply it by hand too.
+export const ALIGNMENT = 'aau-2030-3';
+const DROPPED = ['Boston University']; // no volleyball program
+export function canApplyAlignment(league) {
+  const s = league.seasons?.[league.currentYear];
+  return !!s && !league.draft && !s.games.some(g => g.type === 'regular' && isFinal(g));
+}
+export function applyAlignment(league) {
+  if (!canApplyAlignment(league)) throw new Error('Matches have already been played this season. Move teams in the offseason instead.');
+  const s = league.seasons[league.currentYear];
+  for (const [c, info] of Object.entries(CONFERENCES)) {
+    const have = league.conferences[c];
+    if (have) { delete have.retired; Object.assign(have, { ...info, abbr: info.abbr }); } else league.conferences[c] = JSON.parse(JSON.stringify(info));
+  }
+  for (const school of DROPPED) if (s.teams[school]) removeTeam(s, school);
+  for (const [school, seed] of Object.entries(seedTeams())) {
+    if (s.teams[school]) { s.teams[school].conference = seed.conference; continue; }
+    const t = { ...seed };
+    t.coachId = t.coach ? newCoach(league, t.coach) : null; delete t.coach;
+    s.teams[school] = t;
+  }
+  for (const c of Object.keys(league.conferences)) {
+    if (c === INDEPENDENT || CONFERENCES[c]) continue;
+    if (!Object.values(s.teams).some(t => t.conference === c)) deleteConference(league, s, c);
+  }
+  sortConferences(league);
+  rebuildSchedule(s, league.seasons[s.year - 1] || null);
+  league.alignment = ALIGNMENT;
 }
 
 // Rebuild the regular-season schedule (only before any regular-season game is played).
@@ -550,6 +584,10 @@ export function migrateLeague(league) {
   // Conference matches are Thursday/Friday then Saturday/Sunday; the old
   // Wednesday and Saturday choice becomes Friday and Saturday.
   for (const se of Object.values(league.seasons || {})) for (const [c, f] of Object.entries(se.settings?.confWeekend || {})) if (f === 'ws') se.settings.confWeekend[c] = 'fs';
+  // A dynasty that hasn't played its first match takes the current alignment.
+  if (league.alignment !== ALIGNMENT && league.seasons && canApplyAlignment(league) && league.currentYear === START_YEAR) {
+    try { applyAlignment(league); league.migrated = true; } catch (e) { console.warn(e); }
+  }
   const v = league.schema || 1;
   if (v >= SCHEMA_VERSION) return league;
   if (v < 4) {
