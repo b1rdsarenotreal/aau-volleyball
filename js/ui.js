@@ -1,16 +1,16 @@
 // Shared UI state and pieces used by every page: the league, saving,
 // team labels and logos, game cards, and the game editor.
 
-import { saveLeague } from './store.js?v=20261031141934';
-import { logoFor } from './logos.js?v=20261031141934';
-import { LOGO_ALIASES } from './data.js?v=20261031141934';
-import { ovr, winProbability } from './sim.js?v=20261031141934';
-import { records, isFinal, winnerOf, sameConf } from './standings.js?v=20261031141934';
-import { latestPoll, pollRankMap } from './polls.js?v=20261031141934';
-import { afterChange, applyResult, clearResult, simResult, deleteGame, weekName, estimateHE } from './league.js?v=20261031141934';
-import { regWeeksOf, shownSeed, mcwsVenue, gameVenue } from './postseason.js?v=20261031141934';
-import { DAY_ORDER } from './schedule.js?v=20261031141934';
-import { esc } from './util.js?v=20261031141934';
+import { saveLeague } from './store.js?v=20261031144855';
+import { logoFor } from './logos.js?v=20261031144855';
+import { LOGO_ALIASES } from './data.js?v=20261031144855';
+import { ovr, winProbability } from './sim.js?v=20261031144855';
+import { records, isFinal, winnerOf, sameConf } from './standings.js?v=20261031144855';
+import { latestPoll, pollRankMap } from './polls.js?v=20261031144855';
+import { afterChange, applyResult, clearResult, simResult, deleteGame, weekName, estimateHE } from './league.js?v=20261031144855';
+import { regWeeksOf, shownSeed, mcwsVenue, gameVenue } from './postseason.js?v=20261031144855';
+import { DAY_ORDER } from './schedule.js?v=20261031144855';
+import { esc } from './util.js?v=20261031144855';
 
 export { esc };
 export const ctx = { league: null, render: () => {} };
@@ -212,7 +212,13 @@ function favorite(s, g) {
 // One team's row on a game card or box score: the logo in a box, the poll
 // rank and name (the seed in parentheses in the postseason) and the score.
 // The winner's row takes a faint wash of its color, strongest at the score.
-function teamRow(g, t, R, { big = false, record = false } = {}) {
+// Set-by-set points for a played match on a schedule card: each set's points,
+// bold where this team won the set.
+function setCells(mine, theirs) {
+  if (!mine?.length) return '';
+  return `<span class="ga-sets" title="Points by set">${mine.map((x, i) => `<span class="${Number(x) > Number(theirs?.[i]) ? 'won' : ''}">${x ?? ''}</span>`).join('')}</span>`;
+}
+function teamRow(g, t, R, { big = false, record = false, sets = false } = {}) {
   const fin = isFinal(g), w = fin ? winnerOf(g) : null;
   const ranks = fin ? cache.ranksAt(g.week) : cache.ranks();
   const seed = seedOf(g, t), poll = showsRank(g.type) ? ranks[t] : null;
@@ -224,7 +230,7 @@ function teamRow(g, t, R, { big = false, record = false } = {}) {
   return `<div class="ga-line ${cls}"${wc ? ` style="--wc:${esc(wc)}"` : ''}>
     <a class="ga-logo" href="${t ? teamHref(t) : '#'}" title="${esc(t || '')}">${logoImg(info, big ? 30 : 24)}</a>
     <span class="ga-name">${poll ? `<span class="ga-rk" title="Poll ranking">${poll}</span>` : ''}<a class="team-link" href="${t ? teamHref(t) : '#'}">${seed ? `<span class="ga-seed" title="Seed">(${seed})</span> ` : ''}${esc(t || 'TBD')}</a>${sub}</span>${rec}
-    <span class="ga-score">${fin ? R : ''}</span><span class="ga-caret">${w === t ? '◀' : ''}</span></div>`;
+    ${sets && fin ? (t === g.home ? setCells(g.homeLine, g.awayLine) : setCells(g.awayLine, g.homeLine)) : ''}<span class="ga-score">${fin ? R : ''}</span><span class="ga-caret">${w === t ? '◀' : ''}</span></div>`;
 }
 function gameTop(s, g, close = false, short = !close) {
   const conf = gameConf(s, g);
@@ -246,7 +252,7 @@ export function gameCard(g) {
   }
   const conf = gameConf(s, g);
   return `<div class="game ga ${fin ? 'final' : 'upcoming'}${conf ? ' conf-game' : ''}"${conf ? ` style="--cc:${esc(confColor(conf))}"` : ''} data-game="${g.id}" tabindex="0">${gameTop(s, g)}
-    ${teamRow(g, g.away, g.awayR, { record: !fin })}${teamRow(g, g.home, g.homeR, { record: !fin })}
+    ${teamRow(g, g.away, g.awayR, { record: !fin, sets: true })}${teamRow(g, g.home, g.homeR, { record: !fin, sets: true })}
     <div class="ga-foot"><span class="ga-where">${esc(where)}</span>${right}</div></div>`;
 }
 

@@ -828,6 +828,11 @@ tbody tr.clickable:hover td, tbody tr:hover td { background: color-mix(in srgb, 
 .ga-rec { color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; }
 .ga-score { font: 800 24px/1 var(--body); font-variant-numeric: tabular-nums; min-width: 28px; text-align: right; }
 .ga-caret { width: 10px; font-size: 9px; color: var(--ink); }
+.ga-sets { display: flex; gap: 2px; flex: none; font-size: 13px; font-variant-numeric: tabular-nums; color: var(--muted); }
+.ga-sets span { min-width: 20px; text-align: center; }
+.ga-sets span.won { color: var(--ink); font-weight: 800; }
+.ga-line .ga-sets + .ga-score { margin-left: 4px; padding-left: 8px; border-left: 1px solid var(--line); }
+@media (max-width: 420px) { .ga-sets { font-size: 11px; } .ga-sets span { min-width: 16px; } }
 .ga-line.win .ga-name { font-weight: 800; }
 .ga-line.loss .ga-name .team-link, .ga-line.loss .ga-score { color: var(--muted); }
 .ga-line.loss .ga-score { font-weight: 600; }
