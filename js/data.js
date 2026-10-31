@@ -1,9 +1,11 @@
-// Starting league: the 57 members of the Association of American
-// Universities that sponsor Division I women's volleyball, in the 2030
-// season after the AAU took over college athletics. Teams start in the
-// conferences they play volleyball in today (realign them in the offseason,
-// or before the first serve from each team page). Colors are each school's
-// real colors.
+// Starting league: every member of the Association of American Universities
+// with a women's volleyball team, in the 2030 season after the AAU took over
+// college athletics: 57 from NCAA Division I, 13 from Division III and the two
+// Canadian members (U SPORTS). Teams start in the conferences they play
+// volleyball in today (realign them in the offseason, or before the first
+// serve from each team page). The UAA is kept whole; the other Division III
+// and Canadian schools play in conferences without other AAU members, so they
+// start as independents. Colors are each school's real colors.
 //
 // Ratings: ATK (attack), SRV (serving and passing) and DEF (blocking and
 // digging), 40–99. Stored internally as off / pit / def. They come from each
@@ -11,6 +13,14 @@
 // Division I women's volleyball tournament"; champion Texas A&M), the RPI and
 // AVCA Top 25 from early November 2025, and each program's level for teams
 // that didn't make the tournament. See README → Ratings.
+// Division III and Canadian programs sit well below Division I (OVR 42–50),
+// ordered by their real 2025 results where found: Carnegie Mellon won its
+// first UAA title over No. 17 WashU (24-8), WashU reached the D-III Sweet 16
+// (24-9), Tufts won the NESCAC and hosted a regional (24-6), Emory made its
+// 29th straight NCAA tournament (20-8), Chicago won the UAA regular season
+// (14-12), Case Western was fifth in the UAA (17-14) and Rochester went 4-20.
+// The rest (NYU, Brandeis, Johns Hopkins, MIT, Caltech, UC Santa Cruz, McGill,
+// Toronto) are estimates from each program's usual level.
 
 export const START_YEAR = 2030;
 
@@ -22,6 +32,7 @@ export const CONFERENCES = {
   'Big West':   { abbr: 'BW',  color: '#0E7C86' },
   'Ivy League': { abbr: 'IVY', color: '#00693E' },
   'SEC':        { abbr: 'SEC', color: '#1F4A8C' },
+  'UAA':        { abbr: 'UAA', color: '#4B2E83' },
 };
 
 // [school, conference, abbr, mascot, color, altColor, OVR]
@@ -84,11 +95,44 @@ const T = [
   ['George Washington', 'Independent', 'GW', 'Revolutionaries', '#033C5A', '#AA9868', 57],
   ['Georgetown', 'Independent', 'GTWN', 'Hoyas', '#041E42', '#63666A', 61],
   ['Stony Brook', 'Independent', 'SBU', 'Seawolves', '#990000', '#16243E', 59],
+  // Division III: the University Athletic Association
+  ['Brandeis', 'UAA', 'BRAN', 'Judges', '#003478', '#FFFFFF', 44],
+  ['Carnegie Mellon', 'UAA', 'CMU', 'Tartans', '#C41230', '#6D6E71', 50],
+  ['Case Western', 'UAA', 'CWRU', 'Spartans', '#0A304E', '#FFFFFF', 45],
+  ['Chicago', 'UAA', 'UCHI', 'Maroons', '#800000', '#FFFFFF', 46],
+  ['Emory', 'UAA', 'EMRY', 'Eagles', '#012169', '#F2A900', 49],
+  ['NYU', 'UAA', 'NYU', 'Violets', '#57068C', '#FFFFFF', 47],
+  ['Rochester', 'UAA', 'ROCH', 'Yellowjackets', '#001E5F', '#FFD100', 42],
+  ['WashU', 'UAA', 'WUSTL', 'Bears', '#A51417', '#007360', 50],
+  // Division III, other conferences (Centennial, NEWMAC, NESCAC, SCIAC, C2C)
+  ['Johns Hopkins', 'Independent', 'JHU', 'Blue Jays', '#002D72', '#68ACE5', 46],
+  ['MIT', 'Independent', 'MIT', 'Engineers', '#A31F34', '#8A8B8C', 46],
+  ['Tufts', 'Independent', 'TUFT', 'Jumbos', '#3E8EDE', '#002E6D', 49],
+  ['Caltech', 'Independent', 'CIT', 'Beavers', '#FF6C0C', '#333333', 42],
+  ['UC Santa Cruz', 'Independent', 'UCSC', 'Banana Slugs', '#003C6C', '#FDC700', 43],
+  // Canada (U SPORTS: RSEQ and OUA)
+  ['McGill', 'Independent', 'MCG', 'Martlets', '#ED1B2F', '#FFFFFF', 45],
+  ['Toronto', 'Independent', 'TOR', 'Varsity Blues', '#1E3765', '#FFFFFF', 48],
 ];
 
 // Home arenas: [arena, city]. Every one can be edited on the team page.
 export const SITES = {
   'Arizona': ['McKale Center', 'Tucson, Ariz.'],
+  'Brandeis': ['Red Auerbach Arena', 'Waltham, Mass.'],
+  'Caltech': ['Braun Athletic Center', 'Pasadena, Calif.'],
+  'Carnegie Mellon': ['Skibo Gymnasium', 'Pittsburgh, Pa.'],
+  'Case Western': ['Horsburgh Gymnasium', 'Cleveland, Ohio'],
+  'Chicago': ['Ratner Athletics Center', 'Chicago, Ill.'],
+  'Emory': ['Woodruff P.E. Center', 'Atlanta, Ga.'],
+  'Johns Hopkins': ['Goldfarb Gymnasium', 'Baltimore, Md.'],
+  'McGill': ['Love Competition Hall', 'Montreal, Que.'],
+  'MIT': ['Rockwell Cage', 'Cambridge, Mass.'],
+  'NYU': ['Paulson Center', 'New York, N.Y.'],
+  'Rochester': ['Louis Alexander Palestra', 'Rochester, N.Y.'],
+  'Toronto': ['Goldring Centre', 'Toronto, Ont.'],
+  'Tufts': ['Cousens Gym', 'Medford, Mass.'],
+  'UC Santa Cruz': ['East Field House', 'Santa Cruz, Calif.'],
+  'WashU': ['WashU Field House', 'St. Louis, Mo.'],
   'Arizona State': ['Desert Financial Arena', 'Tempe, Ariz.'],
   'Brown': ['Pizzitola Sports Center', 'Providence, R.I.'],
   'Buffalo': ['Alumni Arena', 'Amherst, N.Y.'],
@@ -150,23 +194,86 @@ export const SITES = {
 // Names the logo lists may know a school by.
 export const LOGO_ALIASES = { 'Penn': 'Pennsylvania', 'Miami': 'Miami', 'UC Santa Barbara': 'UC Santa Barbara', 'George Washington': 'George Washington' };
 
-// Head coaches for 2030. Five years on, nobody knows who will be coaching,
-// so these are made-up names (rename anyone on the Coaches page).
-const FIRST = ['Alexa', 'Brooke', 'Carla', 'Dana', 'Elena', 'Fiona', 'Gina', 'Hailey', 'Iris', 'Jenna', 'Kara', 'Lena', 'Maya', 'Nora', 'Olivia', 'Paige', 'Renee', 'Sofia', 'Tess', 'Vera',
-  'Adam', 'Ben', 'Chris', 'Dan', 'Erik', 'Grant', 'Henry', 'Jake', 'Kyle', 'Luis', 'Marco', 'Nate', 'Owen', 'Paul', 'Reid', 'Sam', 'Tom', 'Wes'];
-const LAST = ['Andersen', 'Baptiste', 'Carver', 'Dominguez', 'Ellery', 'Foster', 'Garland', 'Hayes', 'Iverson', 'Jessup', 'Kowalski', 'Larkin', 'Mendez', 'Novak', 'Ortega', 'Pruitt',
-  'Quinlan', 'Reyes', 'Sorensen', 'Tanaka', 'Underwood', 'Vasquez', 'Whitfield', 'Yates', 'Zimmer', 'Brennan', 'Castellanos', 'Delgado', 'Fairbanks', 'Holm', 'Kessler', 'Lindqvist',
-  'Marchetti', 'Okafor', 'Petrova', 'Rasmussen', 'Sato', 'Thibodeaux', 'Vance', 'Wexler'];
+// Head coaches: each program's real head coach for the 2026 season (school
+// athletics sites, checked October 2026). USC's Brad Keller has been on leave
+// since October 2026 (Megan Moenoa is interim). By 2030 some will have moved
+// on; rename anyone on the Coaches page.
+export const COACHES = {
+  "Illinois": "Chris Tamas",
+  "Indiana": "Steve Aird",
+  "Iowa": "Jim Barnes",
+  "Maryland": "Adam Hughes",
+  "Michigan": "Erin Virtue",
+  "Michigan State": "Kristen Kelsay",
+  "Minnesota": "Keegan Cook",
+  "Northwestern": "Tim Nollan",
+  "Ohio State": "Jen Flynn Oldenburg",
+  "Oregon": "Trent Kersten",
+  "Penn State": "Katie Schumacher-Cawley",
+  "Purdue": "Dave Shondell",
+  "Rutgers": "Caitlin Schweihofer",
+  "UCLA": "Matt Werle",
+  "USC": "Brad Keller",
+  "Washington": "Leslie Gabriel",
+  "Wisconsin": "Kelly Sheffield",
+  "California": "Jen Malcom",
+  "Duke": "Ahen Kim",
+  "Georgia Tech": "Michelle Collier",
+  "Miami": "Jose \"Keno\" Gandara",
+  "North Carolina": "Mike Schall",
+  "Notre Dame": "Salima Rockwell",
+  "Pittsburgh": "Dan Fisher",
+  "Stanford": "Kevin Hambly",
+  "Virginia": "Shannon Wells",
+  "Florida": "Ryan Theis",
+  "Missouri": "Dawn Sullivan",
+  "Texas": "Jerritt Elliott",
+  "Texas A&M": "Jamie Morrison",
+  "Vanderbilt": "Anders Nelson",
+  "Arizona": "Charita Stubbs",
+  "Arizona State": "JJ Van Niel",
+  "Colorado": "Jesse Mahoney",
+  "Kansas": "Matt Ulmer",
+  "Utah": "Alyssa D'Errico",
+  "Brown": "Taylor Virtue",
+  "Columbia": "Patric Santiago",
+  "Cornell": "Trudy Vande Berg",
+  "Dartmouth": "Kevin Maureen Campbell",
+  "Harvard": "Jennifer Weiss",
+  "Penn": "Tyler Hagstrom",
+  "Princeton": "Sabrina King",
+  "Yale": "Erin Appleman",
+  "UC Davis": "Dan Conners",
+  "UC Irvine": "Ashlie Hain",
+  "UC Riverside": "Branden Higa",
+  "UC San Diego": "Spencer McLachlin",
+  "UC Santa Barbara": "Michael Henchy",
+  "Rice": "Genny Volpe",
+  "South Florida": "Jolene Shepardson",
+  "Tulane": "Derek Schroeder",
+  "UAB": "Betsy Freeburg",
+  "Buffalo": "Scott Smith",
+  "George Washington": "Katie Reifert",
+  "Georgetown": "AJ Bonetti",
+  "Stony Brook": "Kristin Belzung",
+  "Brandeis": "Alesia Bennett",
+  "Carnegie Mellon": "Anne Bock",
+  "Case Western": "Karen Farrell",
+  "Chicago": "Mitchell McPartland",
+  "Emory": "Brianna Ike",
+  "NYU": "Andrew Brown",
+  "Rochester": "Ladi Iya",
+  "WashU": "Vanessa Walby",
+  "Johns Hopkins": "Bayleigh Braswell",
+  "MIT": "Paul Dill",
+  "Tufts": "Cora Thompson",
+  "Caltech": "Tom Gardner",
+  "UC Santa Cruz": "Chad Koenegstein",
+  "McGill": "Marie-Christine Lapointe",
+  "Toronto": "Kristine Drakich",
+};
+
 function hashName(s) { let h = 2166136261; for (const c of s) h = Math.imul(h ^ c.charCodeAt(0), 16777619) >>> 0; return h; }
-export const COACHES = (() => {
-  const out = {}, used = new Set();
-  for (const [school] of T) {
-    let h = hashName(school), name;
-    do { name = `${FIRST[h % FIRST.length]} ${LAST[(h >>> 8) % LAST.length]}`; h = hashName(name + h); } while (used.has(name));
-    used.add(name); out[school] = name;
-  }
-  return out;
-})();
 
 export function makeTeam({ school, conference, abbr, mascot = '', coach = '', coachId = null, color = '#555555', altColor = '#dddddd', off = 65, pit = 65, def = 65, stadium, city }) {
   const known = SITES[school] || [];

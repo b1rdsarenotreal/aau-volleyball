@@ -2,8 +2,9 @@
 
 A commissioner-style women's college volleyball dynasty. It's 2030: the NCAA
 has collapsed and the **Association of American Universities** runs college
-athletics. This dynasty covers its **57 members with Division I women's
-volleyball**: set-by-set scores, standings, the RPI, a voters' poll,
+athletics. This dynasty covers **every AAU member with women's volleyball**,
+72 programs from every level (57 from NCAA Division I, 13 from Division III
+and the two Canadian members from U SPORTS): set-by-set scores, standings, the RPI, a voters' poll,
 conference play, the NCAA tournament through the Final Four, coaches, the
 offseason and a record book.
 
@@ -17,7 +18,7 @@ device.
 
 ## The league
 
-57 schools, starting in the conferences they play volleyball in today. You
+72 schools, starting in the conferences they play volleyball in today. You
 change that: move any team on its page (then **Settings → Rebuild schedule**
 before the first match) or in the offseason, add conferences and teams, or
 make a team independent.
@@ -31,10 +32,20 @@ make a team independent.
 | Big 12 | Arizona, Arizona State, Colorado, Kansas, Utah |
 | Big West | UC Davis, UC Irvine, UC Riverside, UC San Diego, UC Santa Barbara |
 | American | Rice, South Florida, Tulane, UAB |
-| Independent | Buffalo, George Washington, Georgetown, Stony Brook |
+| UAA (Division III) | Brandeis, Carnegie Mellon, Case Western, Chicago, Emory, NYU, Rochester, WashU |
+| Independent | Buffalo, George Washington, Georgetown, Stony Brook (D-I); Caltech, Johns Hopkins, MIT, Tufts, UC Santa Cruz (D-III); McGill, Toronto (Canada) |
+
+The UAA is the one Division III conference made up entirely of AAU members,
+so it comes over whole. The other Division III and Canadian schools play in
+conferences with no other AAU members (Centennial, NEWMAC, NESCAC, SCIAC,
+C2C, RSEQ, OUA), so they start as independents; build them a conference or
+move them into one whenever you like. Everyone plays in one league: the UAA
+champion takes an automatic bid like any other conference champion.
 
 Every team has its real colors, mascot, home arena and city. Head coaches are
-made-up names (nobody knows who'll be coaching in 2030); rename them on the
+each program's real head coach for the 2026 season (from the schools'
+athletics sites, checked October 2026; USC's Brad Keller is on leave, with
+Megan Moenoa interim). By 2030 some will have moved on; rename anyone on the
 Coaches page.
 
 ## Ratings
@@ -52,7 +63,16 @@ NCAA Division I women's volleyball tournament* page (Texas A&M beat Kentucky
 for the title). The RPI and AVCA Top 25 from early November 2025 were used
 too, plus each program's level for teams that missed the tournament. The
 2025 Final Four teams among AAU schools, Texas A&M, Pittsburgh and Wisconsin,
-start near the top with Texas and Stanford. Each OVR is split into ATK, SRV and DEF a few
+start near the top with Texas and Stanford.
+
+Division III and Canadian programs start well below Division I, at 42–50
+OVR, ordered by their 2025 seasons where results were found: Carnegie Mellon
+(24-8, first UAA title, beating No. 17 WashU in the final) and WashU (24-9,
+D-III Sweet 16) at the top, then Tufts (24-6, NESCAC champion) and Emory
+(20-8, 29th straight NCAA tournament), Chicago (UAA regular-season champion),
+Case Western (17-14) and Rochester (4-20) at the bottom. NYU, Brandeis, Johns
+Hopkins, MIT, Caltech, UC Santa Cruz, McGill and Toronto are estimates from
+each program's usual level. Each OVR is split into ATK, SRV and DEF a few
 points apart so teams have a style. Edit any rating on the Teams page or a
 team's page.
 

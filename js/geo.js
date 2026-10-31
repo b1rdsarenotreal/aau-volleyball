@@ -22,6 +22,8 @@ const STATES = [
   ['Tennessee', 'Tenn.', 'TN', 35.9, -86.4], ['Texas', 'Texas', 'TX', 31.5, -98.5], ['Utah', 'Utah', 'UT', 39.3, -111.7],
   ['Vermont', 'Vt.', 'VT', 44.1, -72.7], ['Virginia', 'Va.', 'VA', 37.5, -78.9], ['Washington', 'Wash.', 'WA', 47.4, -120.5],
   ['West Virginia', 'W.Va.', 'WV', 38.6, -80.6], ['Wisconsin', 'Wis.', 'WI', 44.6, -89.9], ['Wyoming', 'Wyo.', 'WY', 43.0, -107.6],
+  // Canadian provinces with AAU members
+  ['Quebec', 'Que.', 'QC', 45.5, -73.6], ['Ontario', 'Ont.', 'ON', 43.7, -79.4],
 ];
 const norm = x => String(x || '').toLowerCase().replace(/[.\s]/g, '');
 const BY_NAME = new Map(), CODE = new Map();
@@ -58,6 +60,12 @@ const CITIES = [
   ['La Mirada', 'CA', 33.92, -118.01], ['Irvine', 'CA', 33.68, -117.83], ['San Rafael', 'CA', 37.97, -122.53], ['Lincoln', 'CA', 38.89, -121.29],
   ['Atherton', 'CA', 37.46, -122.20], ['Costa Mesa', 'CA', 33.64, -117.92], ['Moraga', 'CA', 37.83, -122.13], ['Hilo', 'HI', 19.72, -155.09],
   ['Lacey', 'WA', 47.03, -122.82], ['Kaneohe', 'HI', 21.40, -157.80],
+  ['Waltham', 'MA', 42.38, -71.24], ['Cambridge', 'MA', 42.37, -71.11], ['Medford', 'MA', 42.42, -71.11], ['Pasadena', 'CA', 34.15, -118.14],
+  ['Santa Cruz', 'CA', 36.97, -122.03], ['Pittsburgh', 'PA', 40.44, -79.99], ['Cleveland', 'OH', 41.50, -81.69], ['Chicago', 'IL', 41.79, -87.60],
+  ['Evanston', 'IL', 42.05, -87.68], ['Baltimore', 'MD', 39.33, -76.62], ['New York', 'NY', 40.73, -73.99], ['Rochester', 'NY', 43.13, -77.63],
+  ['Ithaca', 'NY', 42.45, -76.48], ['Amherst', 'NY', 43.00, -78.79], ['Stony Brook', 'NY', 40.91, -73.12], ['Philadelphia', 'PA', 39.95, -75.19],
+  ['University Park', 'PA', 40.80, -77.86], ['Princeton', 'NJ', 40.35, -74.66], ['New Brunswick', 'NJ', 40.50, -74.45], ['New Haven', 'CT', 41.31, -72.92],
+  ['Providence', 'RI', 41.83, -71.40], ['Hanover', 'NH', 43.70, -72.29], ['Montreal', 'QC', 45.50, -73.58], ['Toronto', 'ON', 43.66, -79.40],
 ];
 const BY_CITY = new Map(CITIES.map(([c, st, lat, lng]) => [`${norm(c)}|${st}`, [lat, lng]]));
 

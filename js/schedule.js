@@ -22,9 +22,9 @@
 // When `prev` (last season) is given, conference opponents who met once last
 // year swap home and away.
 
-import { isIndependent } from './standings.js?v=20261031130100';
-import { cityPoint, miles } from './geo.js?v=20261031130100';
-import { rng, shuffle, hashStr } from './util.js?v=20261031130100';
+import { isIndependent } from './standings.js?v=20261031131611';
+import { cityPoint, miles } from './geo.js?v=20261031131611';
+import { rng, shuffle, hashStr } from './util.js?v=20261031131611';
 
 export const DEFAULT_REG_WEEKS = 13;
 export const DEFAULT_TOURNEY_WEEKS = 4;
@@ -244,7 +244,8 @@ export function generateSchedule(season, seed = hashStr(String(season.year)), pr
     // Enough events that no event needs two teams from one conference.
     const confCount = {};
     for (const n of free) if (!isIndependent(teams[n].conference)) confCount[teams[n].conference] = (confCount[teams[n].conference] || 0) + 1;
-    const E = Math.max(1, Math.floor(free.length / 4), ...Object.values(confCount));
+    // At most five a site (a five-team round robin fills Thursday to Saturday).
+    const E = Math.max(1, Math.floor(free.length / 4), Math.ceil(free.length / 5), ...Object.values(confCount));
     const sizes = eventSizes(free.length, E);
     if (!sizes.length) return free;
     const events = sizes.map(() => []);

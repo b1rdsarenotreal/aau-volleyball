@@ -13,14 +13,16 @@ const t0 = Date.now();
 let n = 0;
 const check = (name, fn) => { fn(); n++; };
 
-check('57 AAU volleyball programs in their real conferences', () => {
+check('72 AAU volleyball programs in their real conferences', () => {
   const teams = seedTeams();
-  assert.equal(Object.keys(teams).length, 57);
+  assert.equal(Object.keys(teams).length, 72);
   const count = {};
   for (const t of Object.values(teams)) count[t.conference] = (count[t.conference] || 0) + 1;
-  assert.deepEqual(count, { 'Big Ten': 17, ACC: 9, SEC: 5, 'Big 12': 5, 'Ivy League': 8, 'Big West': 5, American: 4, Independent: 4 });
+  assert.deepEqual(count, { 'Big Ten': 17, ACC: 9, SEC: 5, 'Big 12': 5, 'Ivy League': 8, 'Big West': 5, American: 4, UAA: 8, Independent: 11 });
   assert.ok(Object.values(teams).every(t => t.stadium && t.city && t.color && t.mascot), 'every team has an arena, city, colors and mascot');
-  assert.equal(new Set(Object.values(COACHES)).size, 57, 'every coach is a different person');
+  assert.equal(Object.keys(COACHES).length, 72);
+  assert.ok(Object.values(teams).every(t => t.coach === COACHES[t.school]));
+  assert.equal(new Set(Object.values(COACHES)).size, 72, 'every coach is a different person');
   // The OVR split keeps the overall rating.
   for (const t of Object.values(teams)) assert.ok(Math.abs(ovr(t) - (t.off * 0.4 + t.pit * 0.3 + t.def * 0.3)) < 1);
   const s = splitOvr('Texas', 90);

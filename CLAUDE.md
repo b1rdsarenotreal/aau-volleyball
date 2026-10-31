@@ -1,8 +1,9 @@
 # AAU Volleyball
 
-A women's college volleyball dynasty for the 57 AAU schools with Division I
-volleyball, set in 2030. It started as a copy of the owner's MCS Dynasty
-(softball) and keeps its engine and features, adapted to volleyball.
+A women's college volleyball dynasty for all 72 AAU schools with women's
+volleyball (57 Division I, 13 Division III, 2 Canadian), set in 2030. It
+started as a copy of the owner's MCS Dynasty (softball) and keeps its engine
+and features, adapted to volleyball.
 
 **It is not synced with MCS Dynasty, SACAA Dynasty or AAU Dynasty.** Changes
 here aren't ported to those repos, and theirs aren't ported here, unless the
@@ -21,8 +22,10 @@ include this repo.)
   match), `mcws` = the Final Four. User-facing text never says MCWS,
   regional (for the sites), super regional, series, innings, runs or hits.
 - On-screen text says "match", not "game".
-- Teams start in their real 2025 volleyball conferences; ratings come from
-  the 2025 season (Wikipedia). Coaches are made-up names.
+- Teams start in their real 2025 volleyball conferences (the UAA whole; other
+  D-III and Canadian schools independent); ratings come from the 2025 season
+  (Wikipedia, school sites), with D-III and Canadian programs at 42–50.
+  Coaches are the real 2026 head coaches.
 
 ## Before every commit
 
