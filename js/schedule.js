@@ -10,32 +10,35 @@
 //   allow, so some events have 3 teams; those teams play a third match on
 //   Sunday.
 // - Conference play fills the rest of the season, two matches a week against
-//   different opponents (the days are set per conference: Friday and
-//   Saturday by default). A conference plays a double round robin when it
-//   fits, home and away; a big one plays as much of a second round as fits.
-//   Every member always plays the same number of conference matches (a
-//   fail-safe in the schedule builder). A conference that needs fewer weeks
-//   starts later, and its teams play invitationals until then.
+//   different opponents: the first on Thursday or Friday, the second on
+//   Saturday or Sunday (set per conference; Friday and Saturday by default).
+//   Each team plays everyone home and away, or 18 conference matches if that
+//   is fewer (an 8-team conference plays 14, a 12-team one 18: everyone once
+//   and some twice). The 18 is a setting. Every member plays the same number
+//   of conference matches with an even home/away split (a fail-safe in the
+//   schedule builder). A conference that needs fewer weeks starts later, and
+//   its teams play invitationals until then; a big one may start in the last
+//   invitational week to fit its 18.
 // - Teams with an open date in a conference week (a bye in an odd-sized
 //   conference, or an independent) are paired with each other for a
 //   non-conference match when they can.
 // When `prev` (last season) is given, conference opponents who met once last
 // year swap home and away.
 
-import { isIndependent } from './standings.js?v=20261031131611';
-import { cityPoint, miles } from './geo.js?v=20261031131611';
-import { rng, shuffle, hashStr } from './util.js?v=20261031131611';
+import { isIndependent } from './standings.js?v=20261031135021';
+import { cityPoint, miles } from './geo.js?v=20261031135021';
+import { rng, shuffle, hashStr } from './util.js?v=20261031135021';
 
 export const DEFAULT_REG_WEEKS = 13;
 export const DEFAULT_TOURNEY_WEEKS = 4;
 export const MAX_CONF_WEEKS = 11;
 export const PER_WEEK = 2; // conference matches a week
-export const DEFAULT_CONF_MATCHES = 18; // conference matches a team aims for
+export const DEFAULT_CONF_MATCHES = 18; // most conference matches a team plays
 export const DEFAULT_MAX_MATCHES = 30;  // most regular-season matches (NCAA limit is about 28 plus exempt events)
 
-// How many times a conference of n teams plays through its round robin to
-// reach about `target` matches: at least twice (home and away), at most 4.
-export const confCycles = (n, target = DEFAULT_CONF_MATCHES) => Math.max(2, Math.min(4, Math.round(target / Math.max(1, n - 1))));
+// Conference matches each team in an n-team conference plays: everyone home
+// and away, or `max` (18) if that is fewer.
+export const confTarget = (n, max = DEFAULT_CONF_MATCHES) => (n < 2 ? 0 : Math.min(2 * (n - 1), max));
 const TOURNEY_NAMES = ['Classic', 'Invitational', 'Challenge', 'Showcase', 'Kickoff', 'Volleyball Classic'];
 
 // Kept for older code paths that read these (no midweek games in volleyball).
@@ -46,6 +49,9 @@ export const DAY_ORDER = { Mon: 0, Tue: 1, Wed: 2, Thu: 3, Fri: 4, Sat: 5, Sun: 
 // Conference weeks in a season of `regWeeks` with `tourneyWeeks` of
 // invitationals first.
 export function confWeeksFor(regWeeks, tourneyWeeks = DEFAULT_TOURNEY_WEEKS) { return Math.max(1, Math.min(MAX_CONF_WEEKS, regWeeks - tourneyWeeks)); }
+// The most weeks a conference may use (it can start before the invitational
+// weeks end when it needs to; week 1 is always non-conference).
+export function confWeeksMax(regWeeks) { return Math.max(1, Math.min(MAX_CONF_WEEKS, regWeeks - 1)); }
 const rrRounds = n => (n < 2 ? 0 : n % 2 ? n : n - 1);
 
 export function blankGame(season, fields) {
@@ -57,17 +63,18 @@ export function blankGame(season, fields) {
   };
 }
 
-// The two days a conference plays its matches each week. Set per conference
-// (Standings → Commissioner).
+// The two days a conference plays its matches each week: Thursday or Friday,
+// then Saturday or Sunday. Set per conference (Standings → Commissioner).
+// (Older saves may say 'ws', Wednesday and Saturday; it now means Friday and
+// Saturday.)
 export const CONF_WEEKENDS = [
   ['fs', 'Friday and Saturday'],
   ['fsu', 'Friday and Sunday'],
   ['ts', 'Thursday and Saturday'],
-  ['ws', 'Wednesday and Saturday'],
   ['tsu', 'Thursday and Sunday'],
 ];
 export function seriesDays(fmt) {
-  const days = { fs: ['Fri', 'Sat'], fsu: ['Fri', 'Sun'], ts: ['Thu', 'Sat'], ws: ['Wed', 'Sat'], tsu: ['Thu', 'Sun'] }[fmt] || ['Fri', 'Sat'];
+  const days = { fs: ['Fri', 'Sat'], fsu: ['Fri', 'Sun'], ts: ['Thu', 'Sat'], tsu: ['Thu', 'Sun'] }[fmt] || ['Fri', 'Sat'];
   return days.map(day => ({ day, order: DAY_ORDER[day] }));
 }
 // Re-lay a conference's unplayed conference matches after its days change.
@@ -112,29 +119,83 @@ function pickDrops(edges, need, r) {
   return solve() ? chosen : null;
 }
 
-// A conference's rounds for the season: `cycles` round robins (each one with
-// home and away swapped from the last), cut to `maxRounds`. Fail-safe: every
-// member plays the same number of conference matches. When the cut leaves
-// some teams with an extra match, those extra matches are dropped (the
-// teams get a non-conference match or an open date instead). If no clean
-// set of drops exists, the round robin is redrawn and tried again.
-export function confRounds(list, maxRounds, r, cycles = 2) {
+// Home/away for single meetings so every team hosts half its conference
+// matches. Pairs that meet twice already have one home each. The rest are
+// walked as closed trails (an Euler orientation: every visit to a team is one
+// arrival and one departure, so hosts and visits balance). A team with an
+// odd number of single meetings gets a dummy partner, so it ends at most one
+// off. `prefer(a, b)` > 0 means a should host (last season's swap); each
+// trail runs whichever way satisfies more of those.
+function balanceHomes(edges, r, prefer) {
+  const adj = new Map(), deg = new Map();
+  const all = edges.map(e => ({ ...e }));
+  for (const e of all) for (const t of [e.a, e.b]) deg.set(t, (deg.get(t) || 0) + 1);
+  const odd = [...deg].filter(([, d]) => d % 2).map(([t]) => t);
+  for (let i = 0; i + 1 < odd.length; i += 2) all.push({ a: odd[i], b: '\u0000', dummy: true }, { a: odd[i + 1], b: '\u0000', dummy: true });
+  all.forEach((e, i) => { for (const t of [e.a, e.b]) { if (!adj.has(t)) adj.set(t, []); adj.get(t).push(i); } });
+  for (const l of adj.values()) l.splice(0, l.length, ...shuffle(l, r));
+  const used = new Set();
+  for (const start of shuffle([...adj.keys()], r)) {
+    while ((adj.get(start) || []).some(i => !used.has(i))) {
+      const trail = [];
+      let at = start;
+      for (;;) {
+        const i = adj.get(at).find(j => !used.has(j));
+        if (i == null) break;
+        used.add(i);
+        const e = all[i], to = e.a === at ? e.b : e.a;
+        trail.push({ e, host: at, visit: to });
+        at = to;
+      }
+      const score = trail.reduce((s2, x) => s2 + (x.e.dummy || !prefer ? 0 : Math.sign(prefer(x.host, x.visit))), 0);
+      for (const x of trail) [x.e.home, x.e.away] = score < 0 ? [x.visit, x.host] : [x.host, x.visit];
+    }
+  }
+  return all.filter(e => !e.dummy);
+}
+
+// A conference's rounds for the season, at most `maxRounds`: a round robin,
+// then a second one with home and away swapped, taken until every team has
+// its number of conference matches (confTarget). Fail-safe: every member plays
+// the same number, with an even home/away split. When the last rounds give
+// some teams an extra match, extra second meetings are dropped (those teams
+// get a non-conference match or an open date instead); if no clean set of
+// drops exists, the round robin is redrawn and tried again.
+export function confRounds(list, maxRounds, r, max = DEFAULT_CONF_MATCHES, prefer = null) {
   if (list.length < 2) return [];
+  const T = confTarget(list.length, max);
   for (let attempt = 0; attempt < 40; attempt++) {
     const first = roundRobin(list, r);
-    let rounds = [];
-    for (let c = 0; c < cycles; c++) rounds.push(...first.map(pairs => (c % 2 ? pairs.map(([a, b]) => [b, a]) : pairs)));
-    if (rounds.length > maxRounds) rounds = rounds.slice(0, maxRounds);
-    const counts = confSeriesCounts(rounds, list);
-    let k = Math.min(...Object.values(counts));
-    if (Object.values(counts).every(c => c === k)) return rounds;
+    const all = [...first, ...first.map(pairs => pairs.map(([a, b]) => [b, a]))];
+    const rounds = [], cnt = Object.fromEntries(list.map(t => [t, 0]));
+    for (const pairs of all) {
+      if (rounds.length >= maxRounds || list.every(t => cnt[t] >= T)) break;
+      rounds.push(pairs);
+      for (const [a, b] of pairs) if (a && b) { cnt[a]++; cnt[b]++; }
+    }
+    let k = Math.min(T, ...Object.values(cnt));
     if ((list.length * k) % 2) k--;
-    const edges = rounds.flatMap((pairs, ri) => pairs.filter(([a, b]) => a && b).map(([a, b]) => ({ a, b, ri })));
-    const need = Object.fromEntries(list.map(t => [t, counts[t] - k]));
-    const drops = pickDrops(edges, need, r);
-    if (!drops) continue;
-    const gone = new Set(drops.map(i => edges[i]));
-    return rounds.map((pairs, ri) => pairs.filter(([a, b]) => !(a && b) || !edges.some(e => gone.has(e) && e.ri === ri && e.a === a && e.b === b)));
+    const edges = rounds.flatMap((pairs, ri) => pairs.filter(([a, b]) => a && b).map(([a, b]) => ({ a, b, ri, second: ri >= first.length })));
+    const need = Object.fromEntries(list.map(t => [t, cnt[t] - k]));
+    let gone = new Set();
+    if (Object.values(need).some(x => x > 0)) {
+      const seconds = edges.filter(e => e.second);
+      let drops = pickDrops(seconds, need, r);
+      if (drops) drops = drops.map(i => seconds[i]);
+      else { drops = pickDrops(edges, need, r); if (drops) drops = drops.map(i => edges[i]); }
+      if (!drops) continue;
+      gone = new Set(drops);
+    }
+    const kept = edges.filter(e => !gone.has(e));
+    // Pairs meeting twice keep their swapped home and away; balance the rest.
+    const meets = {};
+    for (const e of kept) meets[key(e.a, e.b)] = (meets[key(e.a, e.b)] || 0) + 1;
+    const singles = kept.filter(e => meets[key(e.a, e.b)] === 1);
+    for (const e of balanceHomes(singles, r, prefer)) { const o = singles.find(x => x.a === e.a && x.b === e.b && x.ri === e.ri); o.home = e.home; o.away = e.away; }
+    const out = rounds.map(() => []);
+    for (const e of kept) out[e.ri].push(e.home ? [e.home, e.away] : [e.a, e.b]);
+    while (out.length && !out[out.length - 1].length) out.pop();
+    return out;
   }
   throw new Error(`Couldn't give every team in a ${list.length}-team conference the same number of conference matches.`);
 }
@@ -214,25 +275,19 @@ export function generateSchedule(season, seed = hashStr(String(season.year)), pr
   // ---- conference rounds, two a week, ending on the last weekend ----
   const byConf = {};
   for (const n of names) if (!isIndependent(teams[n].conference)) (byConf[teams[n].conference] ||= []).push(n);
-  const confWeeks = confWeeksFor(REG, TW);
+  const confWeeks = confWeeksMax(REG);
   const slotPairs = {}; // `${week}|${slot}` -> [[a, b, conf]]
   for (const [conf, list] of Object.entries(byConf).sort((a, b) => a[0].localeCompare(b[0]))) {
     if (list.length < 2) continue;
-    const rounds = confRounds(list, confWeeks * PER_WEEK, r, confCycles(list.length, season.settings?.confMatches ?? DEFAULT_CONF_MATCHES));
+    // A pair that only meets once this year swaps hosts from last year when
+    // the home/away balance allows.
+    const prefer = (a, b) => { const h = hosts.get(key(a, b)); return !h || h === 'both' ? 0 : h === a ? -1 : 1; };
+    const rounds = confRounds(list, confWeeks * PER_WEEK, r, season.settings?.confMatches ?? DEFAULT_CONF_MATCHES, prefer);
     const weeksNeeded = Math.ceil(rounds.length / PER_WEEK);
     const firstWeek = REG - weeksNeeded + 1;
-    // A double round robin's second meeting swaps home and away; a pair that
-    // only meets once this year swaps from last year.
-    const meetings = {};
-    for (const pairs of rounds) for (const [a, b] of pairs) if (a && b) meetings[key(a, b)] = (meetings[key(a, b)] || 0) + 1;
     rounds.forEach((pairs, i) => {
       const week = firstWeek + Math.floor(i / PER_WEEK), slot = i % PER_WEEK;
-      for (let [a, b] of pairs) {
-        if (!a || !b) continue;
-        const k = key(a, b), h = hosts.get(k);
-        if (meetings[k] === 1 && h && h !== 'both') [a, b] = h === a ? [b, a] : [a, b];
-        (slotPairs[`${week}|${slot}`] ||= []).push([a, b, conf]);
-      }
+      for (const [a, b] of pairs) if (a && b) (slotPairs[`${week}|${slot}`] ||= []).push([a, b, conf]);
     });
   }
 
@@ -240,12 +295,13 @@ export function generateSchedule(season, seed = hashStr(String(season.year)), pr
   const pts = Object.fromEntries(names.map(n => [n, cityPoint(teams[n].city)]));
   const dist = (a, b) => (pts[a] && pts[b] ? miles(pts[a], pts[b]) : 900);
   let tNo = 1;
-  const invitationals = (week, free) => {
+  const invitationals = (week, free, small = false) => {
     // Enough events that no event needs two teams from one conference.
     const confCount = {};
     for (const n of free) if (!isIndependent(teams[n].conference)) confCount[teams[n].conference] = (confCount[teams[n].conference] || 0) + 1;
     // At most five a site (a five-team round robin fills Thursday to Saturday).
-    const E = Math.max(1, Math.floor(free.length / 4), Math.ceil(free.length / 5), ...Object.values(confCount));
+    // Late in the season (teams near the match cap) at most four, three matches each.
+    const E = Math.max(1, Math.floor(free.length / 4), Math.ceil(free.length / (small ? 4 : 5)), ...Object.values(confCount));
     const sizes = eventSizes(free.length, E);
     if (!sizes.length) return free;
     const events = sizes.map(() => []);
@@ -299,7 +355,7 @@ export function generateSchedule(season, seed = hashStr(String(season.year)), pr
     // Teams with no conference matches this week play an invitational (after
     // the invitational weeks, only those with room under the cap).
     const free = names.filter(n => !busy.has(n) && (week <= TW || room(n) >= 3));
-    if (free.length >= 3) invitationals(week, free);
+    if (free.length >= 3) invitationals(week, free, week > TW);
     if (!busy.size) continue;
     for (let slot = 0; slot < PER_WEEK; slot++) {
       const pairs = slotPairs[`${week}|${slot}`] || [];

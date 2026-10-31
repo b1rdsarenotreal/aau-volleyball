@@ -1,14 +1,14 @@
 // League (dynasty) lifecycle: creating the league, saving results,
 // simulating, adding teams and conferences, and rolling into new seasons.
 
-import { START_YEAR, CONFERENCES, COACHES, seedTeams, makeTeam, fillSite } from './data.js?v=20261031131611';
-import { generateSchedule, blankGame, DAY_ORDER, DEFAULT_REG_WEEKS, DEFAULT_TOURNEY_WEEKS, DEFAULT_CONF_MATCHES, DEFAULT_MAX_MATCHES, PER_WEEK, confWeeksFor, confRounds, confSeriesCounts, confCycles } from './schedule.js?v=20261031131611';
-import { simulateGame, estimateHitsErrors } from './sim.js?v=20261031131611';
-import { generatePoll, releaseDuePolls } from './polls.js?v=20261031131611';
-import { replayRatings, ensureBase } from './ratings.js?v=20261031131611';
-import { progress, lockField, postWeeks, allEvents, regWeeksOf, DEFAULT_NCAA, pickConfHosts, postseasonFinish, citySiteNames, wsTeams } from './postseason.js?v=20261031131611';
-import { isFinal, records, INDEPENDENT } from './standings.js?v=20261031131611';
-import { rng, normal, clamp, hashStr } from './util.js?v=20261031131611';
+import { START_YEAR, CONFERENCES, COACHES, seedTeams, makeTeam, fillSite } from './data.js?v=20261031135021';
+import { generateSchedule, blankGame, DAY_ORDER, DEFAULT_REG_WEEKS, DEFAULT_TOURNEY_WEEKS, DEFAULT_CONF_MATCHES, DEFAULT_MAX_MATCHES, PER_WEEK, confWeeksFor, confWeeksMax, confRounds, confSeriesCounts, confTarget } from './schedule.js?v=20261031135021';
+import { simulateGame, estimateHitsErrors } from './sim.js?v=20261031135021';
+import { generatePoll, releaseDuePolls } from './polls.js?v=20261031135021';
+import { replayRatings, ensureBase } from './ratings.js?v=20261031135021';
+import { progress, lockField, postWeeks, allEvents, regWeeksOf, DEFAULT_NCAA, pickConfHosts, postseasonFinish, citySiteNames, wsTeams } from './postseason.js?v=20261031135021';
+import { isFinal, records, INDEPENDENT } from './standings.js?v=20261031135021';
+import { rng, normal, clamp, hashStr } from './util.js?v=20261031135021';
 
 export const SCHEMA_VERSION = 4;
 
@@ -471,14 +471,14 @@ export function draftWarnings(league) {
     if (c === INDEPENDENT) continue;
     if (n === 1) out.push(`${c} has only one team, so it has no conference matches. It still gets an automatic bid.`);
     const st = currentSeason(league).settings;
-    const weeks = confWeeksFor(st.regWeeks ?? DEFAULT_REG_WEEKS, st.tourneyWeeks ?? DEFAULT_TOURNEY_WEEKS), maxRounds = weeks * PER_WEEK;
-    const cycles = confCycles(n, st.confMatches ?? DEFAULT_CONF_MATCHES), rounds = (n % 2 ? n : n - 1) * cycles;
-    if (n > 1 && rounds > maxRounds) {
+    const weeks = confWeeksMax(st.regWeeks ?? DEFAULT_REG_WEEKS), maxRounds = weeks * PER_WEEK;
+    const T = confTarget(n, st.confMatches ?? DEFAULT_CONF_MATCHES);
+    if (n > 1) {
       const names = Array.from({ length: n }, (_, i) => `t${i}`);
-      const k = confSeriesCounts(confRounds(names, maxRounds, rng(n), cycles), names).t0;
-      out.push(`${c} has ${n} teams. Conference play fits ${weeks} weeks (${maxRounds} rounds), so each team plays ${k} conference matches${k < 2 * (n - 1) ? `: not everyone home and away (which opponents changes every season)` : ''}. Every member plays the same number.`);
+      const k = confSeriesCounts(confRounds(names, maxRounds, rng(n), st.confMatches ?? DEFAULT_CONF_MATCHES), names).t0;
+      if (k < T) out.push(`${c} has ${n} teams. Conference play fits ${weeks} weeks (${maxRounds} rounds), so each team plays ${k} conference matches instead of ${T}. Every member plays the same number.`);
+      else if (T < 2 * (n - 1)) out.push(`${c} has ${n} teams, so each team plays ${T} conference matches: everyone once and some twice (which ones changes every season).`);
     }
-    if (n >= 2 && n <= 4) out.push(`${c} has only ${n} teams, so its teams play each other ${cycles} times.`);
   }
   if (Object.keys(league.draft.teams).length < 16) out.push('The NCAA field needs at least 16 teams.');
   const open = Object.values(league.draft.teams).filter(t => !t.coachId).map(t => t.school).sort();
@@ -538,6 +538,9 @@ export function migrateLeague(league) {
   for (const teams of [...Object.values(league.seasons || {}).map(se => se.teams), ...(league.draft ? [league.draft.teams] : [])]) for (const t of Object.values(teams || {})) fillSite(t);
   // Regionals and super regionals are named after the host's city.
   for (const se of Object.values(league.seasons || {})) citySiteNames(se);
+  // Conference matches are Thursday/Friday then Saturday/Sunday; the old
+  // Wednesday and Saturday choice becomes Friday and Saturday.
+  for (const se of Object.values(league.seasons || {})) for (const [c, f] of Object.entries(se.settings?.confWeekend || {})) if (f === 'ws') se.settings.confWeekend[c] = 'fs';
   const v = league.schema || 1;
   if (v >= SCHEMA_VERSION) return league;
   if (v < 4) {

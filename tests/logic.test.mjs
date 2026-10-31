@@ -2,7 +2,7 @@
 import assert from 'node:assert/strict';
 import { newLeague, currentSeason, simGames, startNextSeason, beginOffseason, draftWarnings, applyResult, estimateHE, migrateLeague, addConference, rebuildSchedule, weekName } from '../js/league.js';
 import { simulateGame, winProbability, simulatedWinRate, ovr } from '../js/sim.js';
-import { generateSchedule, confRounds, confSeriesCounts, eventSizes, confCycles, DEFAULT_REG_WEEKS } from '../js/schedule.js';
+import { generateSchedule, confRounds, confSeriesCounts, eventSizes, confTarget, DEFAULT_REG_WEEKS } from '../js/schedule.js';
 import { records, rpi, confStandings, isFinal, winnerOf, INDEPENDENT } from '../js/standings.js';
 import { gameVenue, postseasonFinish, postseasonDetail, mcwsPlaces, wsTeams, ncaaProblems, fieldSize, DEFAULT_NCAA, confirmField, setConfHost } from '../js/postseason.js';
 import { recordBook } from '../js/records.js';
@@ -93,9 +93,14 @@ check('schedule: invitationals, then conference play two matches a week', () => 
     const counts = Object.values(s.teams).filter(t => t.conference === c).map(t => conf[t.school]);
     assert.equal(new Set(counts).size, 1, `${c}: ${counts}`);
   }
-  assert.equal(conf.Texas, 14); // 5-team SEC: four times around (cut to fit)
-  assert.equal(conf.Harvard, 18); // 8-team Ivy: two and a half times around
-  assert.equal(conf.Purdue, 16); // 17-team Big Ten: as much as fits
+  assert.equal(conf.Texas, 8); // 5-team SEC: everyone home and away
+  assert.equal(conf.Harvard, 14); // 8-team Ivy: everyone home and away
+  assert.equal(conf.Emory, 14); // 8-team UAA
+  assert.equal(conf.Purdue, 18); // 17-team Big Ten: the most, 18
+  // Conference matches: half at home, Thursday or Friday then Saturday or Sunday.
+  const ch = {};
+  for (const g of reg.filter(g => g.confGame)) { ch[g.home] = (ch[g.home] || 0) + 1; assert.ok(g.slot === 0 ? ['Thu', 'Fri'].includes(g.day) : ['Sat', 'Sun'].includes(g.day), `${g.day} slot ${g.slot}`); }
+  for (const t of Object.keys(conf)) assert.equal(ch[t] * 2, conf[t], `${t} hosts half its conference matches`);
   // Two conference matches a week, on the conference's days.
   const pw = {};
   for (const g of reg.filter(g => g.confGame)) for (const t of [g.home, g.away]) { const k = `${t}|${g.week}`; pw[k] = (pw[k] || 0) + 1; }
@@ -110,10 +115,18 @@ check('schedule: invitationals, then conference play two matches a week', () => 
 check('conference round robins are fair at every size', () => {
   for (let k = 2; k <= 20; k++) {
     const names = Array.from({ length: k }, (_, i) => `t${i}`);
-    const rounds = confRounds(names, 18, rng(k), confCycles(k));
+    const rounds = confRounds(names, 22, rng(k));
     const c = Object.values(confSeriesCounts(rounds, names));
     assert.equal(new Set(c).size, 1, `${k} teams`);
-    assert.ok(rounds.length <= 18);
+    assert.equal(c[0], Math.min(2 * (k - 1), 18), `${k} teams: everyone twice or 18`);
+    assert.ok(rounds.length <= 22);
+    // Half at home; a pair that meets twice has one home each.
+    const home = {}, pair = {};
+    for (const p of rounds) for (const [h, a] of p) if (h && a) { home[h] = (home[h] || 0) + 1; (pair[[h, a].sort().join()] ||= []).push(h); }
+    for (const t of names) assert.equal(home[t] || 0, c[0] / 2, `${k} teams: ${t} hosts half`);
+    for (const hs of Object.values(pair)) { assert.ok(hs.length <= 2); if (hs.length === 2) assert.notEqual(hs[0], hs[1]); }
+    // Nobody meets a team a second time before meeting everyone once.
+    if (c[0] >= k - 1) for (const t of names) assert.equal(Object.keys(pair).filter(p => p.split(',').includes(t)).length, k - 1);
   }
   assert.deepEqual(eventSizes(57, 17).reduce((a, b) => a + b), 57);
 });

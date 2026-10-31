@@ -1,17 +1,17 @@
 // League pages: teams, team profiles, conferences, history, settings.
 
-import { ctx, S, app, modal, $, $$, esc, toast, changed, persist, flushSave, cache, team, teamInfo, logoImg, teamOptions, teamHref, confLogo, confHref, confInfo, confColor, imageFileToDataUrl, readableOn, openGame, resultText } from './ui.js?v=20261031131611';
-import { isFinal, winnerOf, records, rpi, confStandings, regSeasonChamp, regSeasonChamps, isIndependent } from './standings.js?v=20261031131611';
-import { ovr } from './sim.js?v=20261031131611';
-import { latestPoll, pollRankMap, pollSizeOf, POLL_SIZES, DEFAULT_POLL_SIZE } from './polls.js?v=20261031131611';
-import { addTeam, removeTeam, renameTeam, addConference, renameConference, deleteConference, rebuildSchedule, startNextSeason, weekName, newLeague, beginOffseason, draftRemoveTeam, draftRestoreTeam, draftWarnings, coachName, coachSchool, hireCoach, newCoach, availableCoaches, backfillHitsErrors, placeRemaining, clearPoints, pointsLeft, migrateLeague, syncCoachBonus, devTotal, coachResumes, coachPrestige, prestigeLabel, coachBonus, programPrestiges, programLabel, fitLabel } from './league.js?v=20261031131611';
-import { hotSeat, HEAT } from './hotseat.js?v=20261031131611';
-import { setRating } from './ratings.js?v=20261031131611';
-import { confFormatName, postseasonFinish, postseasonDetail, postseasonRecord, wsTeams, postWeeks, regWeeksOf, ncaaConfig, ncaaProblems, fieldSize, hasSupers, formatSummary, proposeField, DEFAULT_NCAA, mcwsVenue, allEvents, gameVenue } from './postseason.js?v=20261031131611';
-import { DEFAULT_TOURNEY_WEEKS, DEFAULT_REG_WEEKS, DEFAULT_CONF_MATCHES, DEFAULT_MAX_MATCHES } from './schedule.js?v=20261031131611';
-import { exportLeague, clearLeague } from './store.js?v=20261031131611';
-import { clamp, fmtPct } from './util.js?v=20261031131611';
-import { recordBook, teamPollHistory, headToHead } from './records.js?v=20261031131611';
+import { ctx, S, app, modal, $, $$, esc, toast, changed, persist, flushSave, cache, team, teamInfo, logoImg, teamOptions, teamHref, confLogo, confHref, confInfo, confColor, imageFileToDataUrl, readableOn, openGame, resultText } from './ui.js?v=20261031135021';
+import { isFinal, winnerOf, records, rpi, confStandings, regSeasonChamp, regSeasonChamps, isIndependent } from './standings.js?v=20261031135021';
+import { ovr } from './sim.js?v=20261031135021';
+import { latestPoll, pollRankMap, pollSizeOf, POLL_SIZES, DEFAULT_POLL_SIZE } from './polls.js?v=20261031135021';
+import { addTeam, removeTeam, renameTeam, addConference, renameConference, deleteConference, rebuildSchedule, startNextSeason, weekName, newLeague, beginOffseason, draftRemoveTeam, draftRestoreTeam, draftWarnings, coachName, coachSchool, hireCoach, newCoach, availableCoaches, backfillHitsErrors, placeRemaining, clearPoints, pointsLeft, migrateLeague, syncCoachBonus, devTotal, coachResumes, coachPrestige, prestigeLabel, coachBonus, programPrestiges, programLabel, fitLabel } from './league.js?v=20261031135021';
+import { hotSeat, HEAT } from './hotseat.js?v=20261031135021';
+import { setRating } from './ratings.js?v=20261031135021';
+import { confFormatName, postseasonFinish, postseasonDetail, postseasonRecord, wsTeams, postWeeks, regWeeksOf, ncaaConfig, ncaaProblems, fieldSize, hasSupers, formatSummary, proposeField, DEFAULT_NCAA, mcwsVenue, allEvents, gameVenue } from './postseason.js?v=20261031135021';
+import { DEFAULT_TOURNEY_WEEKS, DEFAULT_REG_WEEKS, DEFAULT_CONF_MATCHES, DEFAULT_MAX_MATCHES } from './schedule.js?v=20261031135021';
+import { exportLeague, clearLeague } from './store.js?v=20261031135021';
+import { clamp, fmtPct } from './util.js?v=20261031135021';
+import { recordBook, teamPollHistory, headToHead } from './records.js?v=20261031135021';
 
 const ui = { confFilter: '', ncaaDraft: null, teamSort: { k: 'ovr', dir: -1 }, coachSort: { k: 'now', dir: -1 }, teamTab: 'season', h2hSort: { k: 'g', dir: -1 }, h2hFilter: 'all', memberSort: { k: 'titles', dir: -1 } };
 
@@ -965,10 +965,10 @@ export function renderSettings() {
       <div class="card stack"><h2>Schedule format</h2>
         <label class="field">Regular-season weeks <input type="number" id="s-weeks" min="8" max="16" value="${cs.regWeeks ?? DEFAULT_REG_WEEKS}"></label>
         <label class="field">Invitational weeks (non-conference) <select id="s-tw">${[1, 2, 3, 4, 5, 6].map(v => `<option value="${v}" ${(cs.tourneyWeeks ?? DEFAULT_TOURNEY_WEEKS) === v ? 'selected' : ''}>Weeks 1–${v}`.replace('Weeks 1–1', 'Week 1') + '</option>').join('')}</select></label>
-        <label class="field">Conference matches a team aims for <input type="number" id="s-cm" min="8" max="24" value="${cs.confMatches ?? DEFAULT_CONF_MATCHES}"></label>
+        <label class="field">Most conference matches per team <input type="number" id="s-cm" min="2" max="24" value="${cs.confMatches ?? DEFAULT_CONF_MATCHES}"></label>
         <label class="field">Most regular-season matches per team <input type="number" id="s-max" min="20" max="36" value="${cs.maxMatches ?? DEFAULT_MAX_MATCHES}"></label>
         <p class="small">About <b>${gamesEstimate(cs)}</b> matches per team.</p>
-        <p class="small muted">Used for every new schedule: the next season, or "Rebuild schedule" before any matches are played. ${cur.year} runs ${regWeeksOf(cur)} weeks. In the invitational weeks every team plays a weekend round robin (usually 4 teams, never two from one conference, three matches each) hosted by one of them. Conference play fills the rest, two matches a week: a double round robin when it fits (a big conference plays as much as fits, everyone the same number), and a small conference goes around more than twice. Each conference's match days are set on the Standings page.</p>
+        <p class="small muted">Used for every new schedule: the next season, or "Rebuild schedule" before any matches are played. ${cur.year} runs ${regWeeksOf(cur)} weeks. In the invitational weeks every team plays a weekend round robin (usually 4 teams, never two from one conference, three matches each) hosted by one of them. Conference play fills the rest, two matches a week (Thursday or Friday, then Saturday or Sunday): everyone home and away, or the most conference matches above if that's fewer (a 7-team conference plays 12, an 11-team one 18). Every member plays the same number, half at home. Each conference's match days are set on the Standings page.</p>
       </div>
       <div class="card stack ncaa-card"><h2>NCAA tournament</h2>
         <label class="field">Finals site <select id="n-ws">${[[4, '4 teams: the Final Four (semifinals and final)'], [8, '8 teams: quarterfinals, semifinals and final']].map(([v, l]) => `<option value="${v}" ${nc.wsSize === v ? 'selected' : ''}>${l}</option>`).join('')}</select></label>

@@ -107,15 +107,19 @@ format):
   some events have three teams, who play a third match on Sunday. The
   Schedule page has **Tournament standings** for each event.
 - **Conference play** fills the rest, two matches a week against different
-  opponents (each conference picks its days: Friday and Saturday by default,
-  or Friday/Sunday, Thursday/Saturday, Wednesday/Saturday, Thursday/Sunday).
-  A conference plays a double round robin, home and away, when it fits; a big
-  one (the 17-team Big Ten) plays as much as fits; a small one goes around
-  more than twice. **Every member plays the same number of conference
-  matches**, and a conference that needs fewer weeks starts later.
+  opponents: the first on Thursday or Friday, the second on Saturday or
+  Sunday (each conference picks: Friday/Saturday by default, or
+  Friday/Sunday, Thursday/Saturday, Thursday/Sunday). Every team plays
+  everyone in its conference home and away, or **18 conference matches** if
+  that's fewer: a 5-team conference plays 8, the 8-team Ivy and UAA 14, the
+  9-team ACC 16, and the 17-team Big Ten 18 (everyone once, two of them twice;
+  which ones changes every season). The 18 is a setting. **Every member plays
+  the same number of conference matches, half at home.** A conference that
+  needs fewer weeks starts later; the Big Ten needs ten weeks, so it starts in
+  the last invitational week.
 - Teams with an open date (a bye in an odd-sized conference, or an
   independent) play a non-conference match when there's an opponent.
-- About **26–30 matches** per team (the most is a setting).
+- About **28–30 matches** per team (the most is a setting).
 
 Standings, tiebreakers, the RPI (25% winning percentage, 50% opponents', 25%
 opponents' opponents'), strength of schedule, quadrants, power ratings and a
