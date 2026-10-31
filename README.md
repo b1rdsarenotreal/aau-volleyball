@@ -2,10 +2,9 @@
 
 A commissioner-style women's college volleyball dynasty. It's 2030: the NCAA
 has collapsed and the **Association of American Universities** runs college
-athletics. This dynasty covers **all 73 AAU members**,
-from every level (57 from NCAA Division I, 13 from Division III,
-the two Canadian members from U SPORTS, and Boston University, which starts a
-program): set-by-set scores, standings, the RPI, a voters' poll,
+athletics. This dynasty covers **every AAU member with women's volleyball**,
+72 programs from every level (57 from NCAA Division I, 13 from Division III
+and the two Canadian members from U SPORTS): set-by-set scores, standings, the RPI, a voters' poll,
 conference play, the NCAA tournament through the Final Four, coaches, the
 offseason and a record book.
 
@@ -19,32 +18,26 @@ device.
 
 ## The league
 
-73 schools. Four conferences are the commissioner's own, each with a logo
-drawn for this dynasty (transparent backgrounds, in `img/conf/`; redraw them
-with `python3 tools/conf_logos.py`). Everyone else starts in the conference
-they play volleyball in today. You change that: move any team on its page
-(then **Settings → Rebuild schedule** before the first match) or in the
-offseason, add conferences and teams, or make a team independent.
+72 schools in the commissioner's eight conferences (the alignment from the
+AAU Dynasty), each with a logo drawn for this dynasty: transparent
+backgrounds, in `img/conf/` (redraw them with `python3 tools/conf_logos.py`).
+Change the alignment yourself: move any team on its page (then **Settings →
+Rebuild schedule** before the first match) or in the offseason, add
+conferences and teams, or make a team independent.
 
 | Conference | Teams |
 |---|---|
-| Coastal Athletic Conference (CAC) | Duke, Florida, Georgia Tech, Maryland, Miami, North Carolina, Notre Dame, South Florida, Virginia |
-| Metro Conference | Boston University, Buffalo, George Washington, Georgetown, McGill, Pittsburgh, Rutgers, Stony Brook, Toronto |
+| Big Ten | Illinois, Indiana, Iowa, Michigan, Michigan State, Minnesota, Northwestern, Ohio State, Penn State, Purdue, Wisconsin |
+| Coastal Atlantic Conference (CAC) | Duke, Florida, Georgia Tech, Maryland, Miami, North Carolina, Notre Dame, South Florida, Virginia |
+| Ivy League | Brown, Columbia, Cornell, Dartmouth, Harvard, Penn, Princeton, Yale |
+| Metro Conference | Buffalo, George Washington, Georgetown, McGill, Pittsburgh, Rutgers, Stony Brook, Toronto |
+| Pacific-10 Conference | Arizona, Arizona State, California, Colorado, Oregon, Stanford, UCLA, USC, Utah, Washington |
 | Southwest Conference (SWC) | Kansas, Missouri, Rice, Texas, Texas A&M, Tulane, UAB, Vanderbilt |
 | UC Athletic Association (UCAA) | Caltech, UC Davis, UC Irvine, UC Riverside, UC San Diego, UC Santa Barbara, UC Santa Cruz |
-| Big Ten | Illinois, Indiana, Iowa, Michigan, Michigan State, Minnesota, Northwestern, Ohio State, Oregon, Penn State, Purdue, UCLA, USC, Washington, Wisconsin |
-| Ivy League | Brown, Columbia, Cornell, Dartmouth, Harvard, Penn, Princeton, Yale |
-| UAA (Division III) | Brandeis, Carnegie Mellon, Case Western, Chicago, Emory, NYU, Rochester, WashU |
-| Big 12 | Arizona, Arizona State, Colorado, Utah |
-| ACC | California, Stanford |
-| Independent | Johns Hopkins, MIT, Tufts (Division III) |
+| University Athletic Association (UAA) | Brandeis, Carnegie Mellon, Case Western, Chicago, Emory, Johns Hopkins, MIT, NYU, Rochester, Tufts, WashU |
 
-Boston University has no volleyball team today; it adds a program for 2030
-(a fictional starting rating of 52 and a made-up coach). The UAA is the one
-Division III conference made up entirely of AAU members, so it comes over
-whole. Johns Hopkins, MIT and Tufts play in conferences with no other AAU
-members, so they start as independents. Everyone plays in one league: every
-conference champion, the UAA's included, takes an automatic bid.
+Division I, Division III and Canadian schools all play in one league; every
+conference champion takes an automatic bid.
 
 Every team has its real colors, mascot, home arena and city. Head coaches are
 each program's real head coach for the 2026 season (from the schools'
@@ -115,12 +108,12 @@ format):
   Sunday (each conference picks: Friday/Saturday by default, or
   Friday/Sunday, Thursday/Saturday, Thursday/Sunday). Every team plays
   everyone in its conference home and away, or **18 conference matches** if
-  that's fewer: a 5-team conference plays 8, the 8-team Ivy and UAA 14, the
-  9-team ACC 16, and the 17-team Big Ten 18 (everyone once, two of them twice;
-  which ones changes every season). The 18 is a setting. **Every member plays
+  that's fewer: the 7-team UCAA plays 12, the 8-team conferences 14, the
+  9-team ones 16, the 10-team Pac-10 18, and the 11-team Big Ten and UAA 18
+  (everyone once, eight of them twice; which ones changes every season). The 18 is a setting. **Every member plays
   the same number of conference matches, half at home.** A conference that
-  needs fewer weeks starts later; the Big Ten needs ten weeks, so it starts in
-  the last invitational week.
+  needs fewer weeks starts later; one that needs ten weeks starts in the last
+  invitational week.
 - Teams with an open date (a bye in an odd-sized conference, or an
   independent) play a non-conference match when there's an opponent.
 - About **28–30 matches** per team (the most is a setting).

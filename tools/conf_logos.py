@@ -44,9 +44,9 @@ def wave(y, amp, length, x0=-10, x1=130):
     return d + f' V130 H{x0} Z'
 
 
-# Coastal Athletic Conference: slate navy and sea glass, waves.
+# Coastal Atlantic Conference: slate navy and sea glass, waves.
 SLATE, SEA, FOAM = '#3A4A5C', '#5CC6C2', '#FFFFFF'
-svg('cac.svg', 'Coastal Athletic Conference', f'''
+svg('cac.svg', 'Coastal Atlantic Conference', f'''
 <defs><clipPath id="c"><circle cx="60" cy="60" r="49"/></clipPath></defs>
 <circle cx="60" cy="60" r="57" fill="{SLATE}" stroke="{SEA}" stroke-width="3"/>
 <circle cx="60" cy="60" r="49" fill="none" stroke="{FOAM}" stroke-width="2"/>
@@ -90,4 +90,48 @@ svg('ucaa.svg', 'UC Athletic Association', f'''
 <path fill="none" stroke="{GOLD}" stroke-width="3" stroke-linecap="round" d="M34 66 q6.5 -4 13 0 t13 0 t13 0 t13 0"/></g>
 {text('UCAA', 60, 92, 22, '#FFFFFF', 0.5)}
 <path d="{shield}" fill="none" stroke="{GOLD}" stroke-width="4" stroke-linejoin="round"/>''')
+# Pacific-10 Conference: deep navy and gold, peaks over the Pacific.
+PNAVY, PGOLD = '#092346', '#D6A84B'
+hexpts = ' '.join(f'{60 + 55 * math.cos(math.radians(-90 + 60 * k)):.1f},{60 + 55 * math.sin(math.radians(-90 + 60 * k)):.1f}' for k in range(6))
+svg('pac10.svg', 'Pacific-10 Conference', f"""
+<defs><clipPath id="p"><polygon points="{hexpts}"/></clipPath></defs>
+<polygon points="{hexpts}" fill="{PNAVY}"/>
+<g clip-path="url(#p)"><circle cx="78" cy="40" r="9" fill="{PGOLD}"/>
+<path fill="#FFFFFF" d="M8 70 L32 42 L42 54 L58 30 L76 56 L86 46 L112 70 Z"/>
+<path fill="{PNAVY}" d="M58 30 L52 39 L58 36 L63 41 Z M32 42 L28 47 L33 45 Z"/>
+<rect x="0" y="70" width="120" height="3" fill="{PGOLD}"/></g>
+{text('PAC-10', 60, 95, 19, '#FFFFFF', 0.3)}
+<polygon points="{hexpts}" fill="none" stroke="{PGOLD}" stroke-width="3.5" stroke-linejoin="round"/>""")
+
+# Big Ten: blue over navy, a cut-corner crest.
+BLUE, BNAVY = '#0088CE', '#0B2A4A'
+crest = '22,6 98,6 114,22 114,98 98,114 22,114 6,98 6,22'
+svg('bigten.svg', 'Big Ten', f"""
+<defs><clipPath id="b"><polygon points="{crest}"/></clipPath></defs>
+<polygon points="{crest}" fill="{BLUE}"/>
+<g clip-path="url(#b)"><rect x="0" y="62" width="120" height="60" fill="{BNAVY}"/></g>
+{text('BIG', 60, 52, 32, '#FFFFFF', 1)}{text('TEN', 60, 96, 32, '#FFFFFF', 1)}
+<polygon points="{crest}" fill="none" stroke="#FFFFFF" stroke-opacity=".9" stroke-width="2.5" stroke-linejoin="round"/>""")
+
+# Ivy League: green and old gold, an ivy leaf.
+IVY, OLDGOLD = '#026937', '#C9B37E'
+leaf = ('M60 16 C65 25 72 28 80 25 C78 33 80 40 87 45 C77 48 70 54 66 62 L60 66 L54 62 '
+        'C50 54 43 48 33 45 C40 40 42 33 40 25 C48 28 55 25 60 16 Z')
+svg('ivy.svg', 'Ivy League', f"""
+<circle cx="60" cy="60" r="57" fill="{IVY}" stroke="{OLDGOLD}" stroke-width="3"/>
+<path fill="#FFFFFF" d="{leaf}"/>
+<path fill="none" stroke="{IVY}" stroke-width="2.4" stroke-linecap="round" d="M60 64 V30 M60 50 L72 38 M60 50 L48 38"/>
+<path fill="none" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" d="M60 66 V75"/>
+{text('IVY', 60, 99, 25, '#FFFFFF', 1.5)}""")
+
+# University Athletic Association: navy and gold, a torch.
+UNAVY, UGOLD = '#003087', '#F2B33D'
+flame = ('M60 13 C70 25 74 33 70 43 C68 47 64 49 60 49 C56 49 52 47 50 43 C47 36 52 29 56 25 '
+         'C56 31 58 33 60 33 C60 27 58 21 60 13 Z')
+svg('uaa.svg', 'University Athletic Association', f"""
+<rect x="6" y="6" width="108" height="108" rx="24" fill="{UNAVY}"/>
+<path fill="{UGOLD}" d="{flame}"/>
+<polygon fill="#FFFFFF" points="46,52 74,52 67,60 53,60"/><polygon fill="#FFFFFF" points="55,62 65,62 62,78 58,78"/>
+{text('UAA', 60, 103, 26, '#FFFFFF', 1)}
+<rect x="6" y="6" width="108" height="108" rx="24" fill="none" stroke="{UGOLD}" stroke-width="3"/>""")
 print('wrote', sorted(os.listdir(OUT)))

@@ -25,9 +25,9 @@
 // When `prev` (last season) is given, conference opponents who met once last
 // year swap home and away.
 
-import { isIndependent } from './standings.js?v=20261031140807';
-import { cityPoint, miles } from './geo.js?v=20261031140807';
-import { rng, shuffle, hashStr } from './util.js?v=20261031140807';
+import { isIndependent } from './standings.js?v=20261031141245';
+import { cityPoint, miles } from './geo.js?v=20261031141245';
+import { rng, shuffle, hashStr } from './util.js?v=20261031141245';
 
 export const DEFAULT_REG_WEEKS = 13;
 export const DEFAULT_TOURNEY_WEEKS = 4;
@@ -318,6 +318,22 @@ export function generateSchedule(season, seed = hashStr(String(season.year)), pr
       });
       if (best < 0) leftovers.push(t); else events[best].push(t);
     }
+    // A team with no rival-free event left: move someone from another event
+    // into an open spot so it can take that someone's place.
+    for (const t of leftovers.splice(0)) {
+      let done = false;
+      for (let i = 0; i < events.length && !done; i++) {
+        if (events[i].length >= sizes[i]) continue;
+        for (let j = 0; j < events.length && !done; j++) {
+          if (j === i) continue;
+          for (const x of events[j]) {
+            if (events[i].some(y => rival(teams, x, y)) || events[j].some(y => y !== x && rival(teams, t, y))) continue;
+            events[i].push(x); events[j][events[j].indexOf(x)] = t; done = true; break;
+          }
+        }
+      }
+      if (!done) leftovers.push(t);
+    }
     const three = [];
     for (const ev of events) {
       if (ev.length < 3) { leftovers.push(...ev); continue; }
@@ -355,7 +371,8 @@ export function generateSchedule(season, seed = hashStr(String(season.year)), pr
     // Teams with no conference matches this week play an invitational (after
     // the invitational weeks, only those with room under the cap).
     const free = names.filter(n => !busy.has(n) && (week <= TW || room(n) >= 3));
-    if (free.length >= 3) invitationals(week, free, week > TW);
+    // Five-team events (four matches) only when nobody would pass the cap.
+    if (free.length >= 3) invitationals(week, free, week > TW || free.some(n => room(n) < 4));
     if (!busy.size) continue;
     for (let slot = 0; slot < PER_WEEK; slot++) {
       const pairs = slotPairs[`${week}|${slot}`] || [];

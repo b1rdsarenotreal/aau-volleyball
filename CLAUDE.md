@@ -1,8 +1,7 @@
 # AAU Volleyball
 
-A women's college volleyball dynasty for the AAU's 73 schools (57 Division I,
-13 Division III, 2 Canadian, and Boston University, which adds a program),
-set in 2030. It
+A women's college volleyball dynasty for all 72 AAU schools with women's
+volleyball (57 Division I, 13 Division III, 2 Canadian), set in 2030. It
 started as a copy of the owner's MCS Dynasty (softball) and keeps its engine
 and features, adapted to volleyball.
 
@@ -23,10 +22,9 @@ include this repo.)
   match), `mcws` = the Final Four. User-facing text never says MCWS,
   regional (for the sites), super regional, series, innings, runs or hits.
 - On-screen text says "match", not "game".
-- The owner's conferences (Coastal Athletic, Metro, Southwest, UC Athletic
-  Association) are set in `js/data.js` with drawn logos (`tools/conf_logos.py`,
-  transparent SVGs in `img/conf/`); other teams start in their real 2025
-  volleyball conferences (the UAA whole; other D-III schools independent); ratings come from the 2025 season
+- Teams start in the owner's eight conferences (the AAU Dynasty alignment),
+  set in `js/data.js` with drawn logos (`tools/conf_logos.py`, transparent
+  SVGs in `img/conf/`); ratings come from the 2025 season
   (Wikipedia, school sites), with D-III and Canadian programs at 42–50.
   Coaches are the real 2026 head coaches.
 

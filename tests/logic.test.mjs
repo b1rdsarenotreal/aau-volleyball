@@ -14,17 +14,17 @@ const t0 = Date.now();
 let n = 0;
 const check = (name, fn) => { fn(); n++; };
 
-check('73 AAU volleyball programs in their starting conferences', () => {
+check('72 AAU volleyball programs in the commissioner\'s conferences', () => {
   const teams = seedTeams();
-  assert.equal(Object.keys(teams).length, 73);
+  assert.equal(Object.keys(teams).length, 72);
   const count = {};
   for (const t of Object.values(teams)) count[t.conference] = (count[t.conference] || 0) + 1;
-  assert.deepEqual(count, { 'Big Ten': 15, ACC: 2, 'Big 12': 4, 'Ivy League': 8, UAA: 8, 'Coastal Athletic Conference': 9, 'Metro Conference': 9, 'Southwest Conference': 8, 'UC Athletic Association': 7, Independent: 3 });
-  for (const c of ['Coastal Athletic Conference', 'Metro Conference', 'Southwest Conference', 'UC Athletic Association']) assert.ok(existsSync(new URL(`../${CONFERENCES[c].logo}`, import.meta.url)), `${c} logo`);
+  assert.deepEqual(count, { 'Big Ten': 11, 'Coastal Atlantic Conference': 9, 'Pacific-10 Conference': 10, 'Metro Conference': 8, 'Southwest Conference': 8, 'Ivy League': 8, 'UC Athletic Association': 7, 'University Athletic Association': 11 });
+  for (const c of Object.keys(CONFERENCES)) assert.ok(existsSync(new URL(`../${CONFERENCES[c].logo}`, import.meta.url)), `${c} logo`);
   assert.ok(Object.values(teams).every(t => t.stadium && t.city && t.color && t.mascot), 'every team has an arena, city, colors and mascot');
-  assert.equal(Object.keys(COACHES).length, 73);
+  assert.equal(Object.keys(COACHES).length, 72);
   assert.ok(Object.values(teams).every(t => t.coach === COACHES[t.school]));
-  assert.equal(new Set(Object.values(COACHES)).size, 73, 'every coach is a different person');
+  assert.equal(new Set(Object.values(COACHES)).size, 72, 'every coach is a different person');
   // The OVR split keeps the overall rating.
   for (const t of Object.values(teams)) assert.ok(Math.abs(ovr(t) - (t.off * 0.4 + t.pit * 0.3 + t.def * 0.3)) < 1);
   const s = splitOvr('Texas', 90);
@@ -99,8 +99,9 @@ check('schedule: invitationals, then conference play two matches a week', () => 
   assert.equal(conf.Duke, 16); // 9-team Coastal
   assert.equal(conf['UC Davis'], 12); // 7-team UCAA
   assert.equal(conf.Harvard, 14); // 8-team Ivy: everyone home and away
-  assert.equal(conf.Emory, 14); // 8-team UAA
-  assert.equal(conf.Purdue, 18); // 15-team Big Ten: the most, 18
+  assert.equal(conf.Emory, 18); // 11-team UAA: the most, 18
+  assert.equal(conf.Stanford, 18); // 10-team Pac-10: 18, everyone twice
+  assert.equal(conf.Purdue, 18); // 11-team Big Ten: the most, 18
   // Conference matches: half at home, Thursday or Friday then Saturday or Sunday.
   const ch = {};
   for (const g of reg.filter(g => g.confGame)) { ch[g.home] = (ch[g.home] || 0) + 1; assert.ok(g.slot === 0 ? ['Thu', 'Fri'].includes(g.day) : ['Sat', 'Sun'].includes(g.day), `${g.day} slot ${g.slot}`); }
@@ -157,7 +158,7 @@ check('regular season results', () => {
   const recs = records(s), r = rpi(s);
   assert.ok(Object.values(recs).every(x => x.w + x.l >= 24));
   assert.ok(Object.values(r).every(x => x.rpi > 0 && x.rpi < 1));
-  assert.ok(confStandings(s, 'Big Ten').length === 15);
+  assert.ok(confStandings(s, 'Big Ten').length === 11);
   assert.ok(Object.keys(s.polls).length >= 10, 'weekly polls');
 });
 
