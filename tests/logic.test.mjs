@@ -4,7 +4,7 @@ import { ALIGNMENT, newLeague, currentSeason, simGames, startNextSeason, beginOf
 import { simulateGame, winProbability, simulatedWinRate, ovr } from '../js/sim.js';
 import { generateSchedule, confRounds, confSeriesCounts, eventSizes, confTarget, DEFAULT_REG_WEEKS } from '../js/schedule.js';
 import { records, rpi, confStandings, isFinal, winnerOf, INDEPENDENT } from '../js/standings.js';
-import { gameVenue, postseasonFinish, postseasonDetail, mcwsPlaces, wsTeams, ncaaProblems, fieldSize, DEFAULT_NCAA, confirmField, setConfHost } from '../js/postseason.js';
+import { regionalSeed, gameVenue, postseasonFinish, postseasonDetail, mcwsPlaces, wsTeams, ncaaProblems, fieldSize, DEFAULT_NCAA, confirmField, setConfHost } from '../js/postseason.js';
 import { recordBook } from '../js/records.js';
 import { seedTeams, splitOvr, COACHES, CONFERENCES } from '../js/data.js';
 import { existsSync } from 'node:fs';
@@ -169,6 +169,8 @@ check('NCAA format checks', () => {
   assert.equal(fieldSize(DEFAULT_NCAA), 32);
   assert.ok(ncaaProblems({ regionals: 16, perRegional: 4, wsSize: 4 }, 57).length);
   assert.deepEqual(ncaaProblems({ regionals: 4, perRegional: 4, wsSize: 4 }, 57), []);
+  assert.deepEqual(ncaaProblems({ regionals: 4, perRegional: 6, wsSize: 4 }, 57), []);
+  assert.deepEqual(ncaaProblems({ regionals: 8, perRegional: 4, wsSize: 4 }, 57), []);
 });
 
 // A conference tournament for the Ivy League (most conferences have none).
@@ -185,7 +187,7 @@ check('regular season results', () => {
 });
 
 simGames(s, undefined, { autoLock: true });
-check('postseason: conference tournament, 8 sites of 4, regional finals, Final Four', () => {
+check('postseason: conference tournament, 4 regionals of 8, Final Four', () => {
   const p = s.post;
   assert.equal(s.phase, 'complete');
   assert.ok(p.confT['Ivy League'] && p.confT['Ivy League'].champion);
@@ -193,18 +195,21 @@ check('postseason: conference tournament, 8 sites of 4, regional finals, Final F
   assert.equal(p.field.length, 32);
   const autos = p.field.filter(f => f.bid === 'auto');
   assert.ok(autos.some(f => f.team === p.confT['Ivy League'].champion), 'the tournament champion gets the bid');
-  assert.equal(p.regionals.length, 8);
-  assert.ok(p.regionals.every(ev => ev.seeds.length === 4 && ev.host === ev.seeds[0] && ev.champion));
-  assert.equal(p.supers.length, 4);
-  assert.ok(p.supers.every(ev => ev.champion));
+  assert.equal(p.regionals.length, 4);
+  assert.ok(!p.supers, 'regional winners go straight to the Final Four');
+  // Regional k is hosted by national seed k + 1, its regional 1 seed.
+  const nat = t => p.field.find(f => f.team === t).seed;
+  p.regionals.forEach((ev, k) => { assert.equal(ev.seeds.length, 8); assert.equal(ev.host, ev.seeds[0]); assert.equal(nat(ev.host), k + 1); assert.ok(ev.champion); });
+  assert.equal(regionalSeed(s, p.regionals[2].seeds[5]), 6);
+  // Three rounds in each regional: 1 v 8, 4 v 5, 2 v 7, 3 v 6 first.
+  const r1 = s.games.filter(g => g.type === 'regional' && g.event === p.regionals[0].id && g.node?.startsWith('R1-'));
+  assert.deepEqual(r1.map(g => regionalSeed(s, g.home) + regionalSeed(s, g.away)).sort(), [9, 9, 9, 9]);
   assert.equal(wsTeams(s).length, 4);
-  // Bracket kept: the 1 seed's path meets the 4 seed's path in the semifinals.
-  // Regional final i pairs site i with site 7 - i (seed 1's site with seed 8's).
-  p.supers.forEach((ev, i) => assert.deepEqual(new Set(ev.seeds), new Set([p.regionals[i].champion, p.regionals[7 - i].champion])));
-  const path = t => p.supers.findIndex(ev => ev.seeds.includes(t));
+  // Final Four: the regional hosted by the 1 seed meets the 4 seed's, 2 meets 3.
+  const path = t => p.regionals.findIndex(ev => ev.seeds.includes(t));
   const semi = s.games.filter(g => g.type === 'mcws' && g.node?.startsWith('R1-'));
   assert.equal(semi.length, 2);
-  for (const g of semi) assert.equal(path(g.home) + path(g.away), 3, 'semifinals: paths 1 v 4 and 2 v 3');
+  for (const g of semi) assert.equal(path(g.home) + path(g.away), 3, 'semifinals: 1 v 4 and 2 v 3');
   // Every NCAA match is one match.
   for (const g of s.games.filter(g => ['regional', 'super', 'mcws'].includes(g.type))) assert.ok(isFinal(g) && !g.series);
   assert.ok(p.champion && p.runnerUp && p.champion !== p.runnerUp);
@@ -213,11 +218,11 @@ check('postseason: conference tournament, 8 sites of 4, regional finals, Final F
   assert.equal(Object.values(places).filter(x => x.place === 3).length, 2);
   assert.equal(postseasonFinish(s, p.champion), 'National champion');
   assert.equal(postseasonFinish(s, p.runnerUp), 'National runner-up');
-  const elite = p.supers.flatMap(ev => ev.seeds).find(t => !wsTeams(s).includes(t));
-  assert.equal(postseasonFinish(s, elite), 'Elite Eight');
   const out1 = p.regionals[0].seeds.find(t => t !== p.regionals[0].champion);
-  assert.equal(postseasonFinish(s, out1), 'NCAA tournament');
-  assert.match(postseasonDetail(s, out1).text, /Site · out in the (first|second) round/);
+  assert.ok(['NCAA tournament', 'Sweet 16', 'Elite Eight'].includes(postseasonFinish(s, out1)));
+  const finalist = s.games.find(g => g.event === p.regionals[1].id && g.node === 'R3-1');
+  assert.equal(postseasonFinish(s, finalist.home === p.regionals[1].champion ? finalist.away : finalist.home), 'Elite Eight');
+  assert.match(postseasonDetail(s, out1).text, /Regional · out in the (first|second|third) round/);
   assert.ok(s.polls.final, 'final poll');
   assert.equal(s.polls.final.ranks[0].team, p.champion, 'the champion is #1 in the final poll');
 });

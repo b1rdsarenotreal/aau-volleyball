@@ -1,14 +1,14 @@
 // League (dynasty) lifecycle: creating the league, saving results,
 // simulating, adding teams and conferences, and rolling into new seasons.
 
-import { START_YEAR, CONFERENCES, COACHES, seedTeams, makeTeam, fillSite } from './data.js?v=20261031144855';
-import { generateSchedule, blankGame, DAY_ORDER, DEFAULT_REG_WEEKS, DEFAULT_TOURNEY_WEEKS, DEFAULT_CONF_MATCHES, DEFAULT_MAX_MATCHES, PER_WEEK, confWeeksFor, confWeeksMax, confRounds, confSeriesCounts, confTarget } from './schedule.js?v=20261031144855';
-import { simulateGame, estimateHitsErrors } from './sim.js?v=20261031144855';
-import { generatePoll, releaseDuePolls } from './polls.js?v=20261031144855';
-import { replayRatings, ensureBase } from './ratings.js?v=20261031144855';
-import { progress, lockField, postWeeks, allEvents, regWeeksOf, DEFAULT_NCAA, pickConfHosts, postseasonFinish, citySiteNames, wsTeams } from './postseason.js?v=20261031144855';
-import { isFinal, records, INDEPENDENT } from './standings.js?v=20261031144855';
-import { rng, normal, clamp, hashStr } from './util.js?v=20261031144855';
+import { START_YEAR, CONFERENCES, COACHES, seedTeams, makeTeam, fillSite } from './data.js?v=20261031161033';
+import { generateSchedule, blankGame, DAY_ORDER, DEFAULT_REG_WEEKS, DEFAULT_TOURNEY_WEEKS, DEFAULT_CONF_MATCHES, DEFAULT_MAX_MATCHES, PER_WEEK, confWeeksFor, confWeeksMax, confRounds, confSeriesCounts, confTarget } from './schedule.js?v=20261031161033';
+import { simulateGame, estimateHitsErrors } from './sim.js?v=20261031161033';
+import { generatePoll, releaseDuePolls } from './polls.js?v=20261031161033';
+import { replayRatings, ensureBase } from './ratings.js?v=20261031161033';
+import { progress, lockField, postWeeks, allEvents, regWeeksOf, DEFAULT_NCAA, OLD_DEFAULT_NCAA, pickConfHosts, postseasonFinish, citySiteNames, wsTeams } from './postseason.js?v=20261031161033';
+import { isFinal, records, INDEPENDENT } from './standings.js?v=20261031161033';
+import { rng, normal, clamp, hashStr } from './util.js?v=20261031161033';
 
 export const SCHEMA_VERSION = 4;
 
@@ -297,7 +297,7 @@ export function rebuildSchedule(season, prev = null) {
 // the head coach's prestige (see coachBonus). The commissioner places the
 // points on ATK, SRV and DEF in the Offseason.
 const DEV_LUCK = { none: 0, small: 3, normal: 5, big: 8 };
-const FINISH_BONUS = { 'National champion': 4.5, 'National runner-up': 3.5, 'Final Four': 3, 'Regional': 2, 'Sweet 16': 2, 'NCAA tournament': 1.5 };
+const FINISH_BONUS = { 'National champion': 4.5, 'National runner-up': 3.5, 'Final Four': 3, 'Elite Eight': 2.5, 'Regional': 2, 'Sweet 16': 2, 'NCAA tournament': 1.5 };
 export const RATING_KEYS = ['off', 'pit', 'def'];
 export function devPoints(team, season, r, level = 'normal', avgO = 70) {
   if (level === 'none') return 0;
@@ -547,8 +547,8 @@ export function seasonWeeks(season) {
 export function weekName(w, season) {
   if (season) {
     const W = postWeeks(season);
-    const names = { [W.conf]: 'Conf. Tournaments', [W.regional]: 'NCAA 1st & 2nd Rds', [W.mcws]: season.settings?.mcwsName || 'Final Four' };
-    if (W.super) names[W.super] = 'Regional Finals';
+    const names = { [W.conf]: 'Conf. Tournaments', [W.regional]: 'NCAA Regionals', [W.mcws]: season.settings?.mcwsName || 'Final Four' };
+    if (W.super) names[W.super] = 'Super Regionals';
     if (names[w]) return names[w];
   }
   return `Week ${w}`;
@@ -580,6 +580,13 @@ export function migrateLeague(league) {
     if (!info) continue;
     const have = league.conferences[c];
     if (have && info.logo && !have.logo) Object.assign(have, { logo: info.logo, altColor: info.altColor, color: info.color, abbr: have.abbr || info.abbr });
+  }
+  // Seasons still on the old default NCAA format (8 sites of 4 and super
+  // regionals) whose field isn't set yet move to the new default: 4
+  // regionals of 8, seeded 1–8.
+  for (const se of Object.values(league.seasons || {})) {
+    const n = se.settings?.ncaa;
+    if (n && !se.post?.regionals && Object.keys(OLD_DEFAULT_NCAA).every(k => n[k] === OLD_DEFAULT_NCAA[k])) se.settings.ncaa = { ...n, ...DEFAULT_NCAA };
   }
   // Conference matches are Thursday/Friday then Saturday/Sunday; the old
   // Wednesday and Saturday choice becomes Friday and Saturday.

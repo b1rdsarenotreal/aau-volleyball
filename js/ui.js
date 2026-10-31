@@ -1,16 +1,16 @@
 // Shared UI state and pieces used by every page: the league, saving,
 // team labels and logos, game cards, and the game editor.
 
-import { saveLeague } from './store.js?v=20261031144855';
-import { logoFor } from './logos.js?v=20261031144855';
-import { LOGO_ALIASES } from './data.js?v=20261031144855';
-import { ovr, winProbability } from './sim.js?v=20261031144855';
-import { records, isFinal, winnerOf, sameConf } from './standings.js?v=20261031144855';
-import { latestPoll, pollRankMap } from './polls.js?v=20261031144855';
-import { afterChange, applyResult, clearResult, simResult, deleteGame, weekName, estimateHE } from './league.js?v=20261031144855';
-import { regWeeksOf, shownSeed, mcwsVenue, gameVenue } from './postseason.js?v=20261031144855';
-import { DAY_ORDER } from './schedule.js?v=20261031144855';
-import { esc } from './util.js?v=20261031144855';
+import { saveLeague } from './store.js?v=20261031161033';
+import { logoFor } from './logos.js?v=20261031161033';
+import { LOGO_ALIASES } from './data.js?v=20261031161033';
+import { ovr, winProbability } from './sim.js?v=20261031161033';
+import { records, isFinal, winnerOf, sameConf } from './standings.js?v=20261031161033';
+import { latestPoll, pollRankMap } from './polls.js?v=20261031161033';
+import { afterChange, applyResult, clearResult, simResult, deleteGame, weekName, estimateHE } from './league.js?v=20261031161033';
+import { regWeeksOf, shownSeed, regionalSeed, mcwsVenue, gameVenue } from './postseason.js?v=20261031161033';
+import { DAY_ORDER } from './schedule.js?v=20261031161033';
+import { esc } from './util.js?v=20261031161033';
 
 export { esc };
 export const ctx = { league: null, render: () => {} };
@@ -144,13 +144,14 @@ export function imageFileToDataUrl(file, max = 256) {
 
 // ---------- game cards ----------
 
-// Seed shown on a postseason game: the conference tournament seed, or the
-// national seed for NCAA regional hosts only.
+// Seed shown on a postseason game: the conference tournament seed, the
+// regional seed in a regional, or the national seed (regional hosts only)
+// after that.
 export function seedOf(g, t) {
   const s = S();
   if (g.type === 'conf') { const ev = Object.values(s.post?.confT || {}).find(e => e.id === g.event); const i = ev ? ev.seeds.indexOf(t) : -1; return i >= 0 ? i + 1 : null; }
   if (!['regional', 'super', 'mcws'].includes(g.type)) return null;
-  return shownSeed(s, t);
+  return g.type === 'regional' ? regionalSeed(s, t) : shownSeed(s, t);
 }
 
 export function resultText(g) {

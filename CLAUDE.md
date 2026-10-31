@@ -17,10 +17,12 @@ include this repo.)
   and a record's `rs`/`ra` are sets won and lost.
 - Ratings are stored as `off`, `pit`, `def` and shown as ATK (attack), SRV
   (serving and passing), DEF (blocking and digging). OVR = 0.4/0.3/0.3.
-- Postseason stage names stay internal from MCS: `regionals` = first- and
-  second-round sites (single elimination), `supers` = regional finals (one
-  match), `mcws` = the Final Four. User-facing text never says MCWS,
-  regional (for the sites), super regional, series, innings, runs or hits.
+- Postseason stages keep the MCS internal names: `regionals` = regionals
+  (single elimination, 2–8 teams, each team with a regional seed 1–N shown
+  inside its regional), `supers` = super regionals (one match between two
+  regional winners), `mcws` = the Final Four. The owner chose the names
+  Regional and Super Regional. User-facing text never says MCWS, series,
+  innings, runs or hits.
 - On-screen text says "match", not "game".
 - Teams start in the owner's eight conferences (the AAU Dynasty alignment),
   set in `js/data.js` with drawn logos (`tools/conf_logos.py`, transparent

@@ -134,19 +134,25 @@ all work as in MCS Dynasty, with sets in place of runs.
    bid; the committee picks the at-large teams in committee order (RPI, Q1
    wins, Q4 losses, then SOS, head-to-head and so on), teams below .500 can't
    take an at-large spot, you check and uncheck teams, confirm them, drag
-   seeds, watch the site preview, and announce the field. **Bracketology**
+   seeds, watch the regional preview, and announce the field. **Bracketology**
    projects it from week 4.
 3. **NCAA tournament** (Settings → NCAA tournament), every round one match:
-   - **First and second rounds**: 32 teams at 8 sites of 4, hosted by the
-     top 8 seeds, placed serpentine.
-   - **Regional finals** (the Elite Eight): two site winners, one match at the
-     higher seed. Site 1 meets site 8, 2 meets 7, and so on.
+   - **Regionals**: 32 teams in 4 regionals of 8, hosted by the top 4
+     national seeds and built serpentine. Every team has a **regional seed**
+     inside its regional (1–8), shown on the bracket, schedule and box
+     scores. Three rounds, Thursday to Saturday: 1 v 8, 4 v 5, 2 v 7 and 3 v
+     6, then 1/8 v 4/5 and 2/7 v 3/6, then the regional final (the Elite
+     Eight). With 6 per regional (24 teams) the 1 and 2 seeds wait a round;
+     with 4 (16 teams) it's 1 v 4 and 2 v 3, then the final.
    - **Final Four** at T-Mobile Center in Kansas City (change the name, arena
-     and city in Settings): semifinals Thursday, national final Sunday, the
-     bracket kept (the 1 seed's path meets the 4 seed's).
+     and city in Settings): semifinals Thursday, national final Sunday. The
+     semifinals keep the bracket by the hosts' national seeds: the 1 seed's
+     regional meets the 4 seed's, and 2 meets 3.
 
-   Other shapes: 4 sites sending winners straight to the Final Four, 2–6 teams
-   per site, or 8 teams at the finals.
+   Other shapes: 2–8 teams per regional, 8 regionals whose winners meet in
+   super regionals (one match at the higher national seed), or 8 teams at
+   the finals. A dynasty saved on the old default (8 regionals of 4) moves
+   to 4 of 8 for any season whose field hasn't been announced.
 
 The final poll comes out after the final, with the champion at #1.
 

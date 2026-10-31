@@ -74,7 +74,8 @@ with sync_playwright() as p:
             pg.click("#ps-all"); pg.wait_for_timeout(1500)
     t = visit(pg, "#/postseason")
     assert "National Champion" in t
-    for tab in ["regionals", "supers", "participants", "mcws"]:
+    assert pg.locator('[data-pt="supers"]').count() == 0, "no super regionals with 4 regionals"
+    for tab in ["regionals", "participants", "mcws"]:
         pg.click(f'[data-pt="{tab}"]'); pg.wait_for_timeout(250)
         assert "Something went wrong" not in pg.locator("#app").inner_text()
         shot(pg, f"d-{tab}")
