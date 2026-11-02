@@ -97,12 +97,14 @@ match, a day, a week or the season.
 format):
 
 - **Invitationals** (weeks 1–4): every team plays a weekend round robin,
-  usually four teams and three matches (Friday, then two on Saturday), hosted
-  by one of them and named for it (the *Texas Invitational*). No two teams
-  from one conference, rarely a repeat opponent, and teams lean toward events
-  near home. A big conference needs more events than four-team ones allow, so
-  some events have three teams, who play a third match on Sunday. The
-  Schedule page has **Tournament standings** for each event.
+  usually four teams and three matches, **one a day with no doubleheaders**:
+  some events run Thursday to Saturday, others Friday to Sunday. Each is
+  hosted by one of its teams and named for it (the *Texas Invitational*). No
+  two teams from one conference, rarely a repeat opponent, and teams lean
+  toward events near home. A big conference needs more events than
+  four-team ones allow, so some events have three teams; each day one of
+  them sits out, and teams sitting out the same day meet in a third match.
+  The Schedule page has **Tournament standings** for each event.
 - **Conference play** fills the rest, two matches a week against different
   opponents: the first on Thursday or Friday, the second on Saturday or
   Sunday (each conference picks: Friday/Saturday by default, or

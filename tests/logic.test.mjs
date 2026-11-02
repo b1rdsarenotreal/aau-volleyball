@@ -2,7 +2,7 @@
 import assert from 'node:assert/strict';
 import { ALIGNMENT, newLeague, currentSeason, simGames, startNextSeason, beginOffseason, draftWarnings, applyResult, estimateHE, migrateLeague, addConference, rebuildSchedule, weekName } from '../js/league.js';
 import { simulateGame, winProbability, simulatedWinRate, ovr } from '../js/sim.js';
-import { generateSchedule, confRounds, confSeriesCounts, eventSizes, confTarget, DEFAULT_REG_WEEKS } from '../js/schedule.js';
+import { DAY_ORDER, generateSchedule, confRounds, confSeriesCounts, eventSizes, confTarget, DEFAULT_REG_WEEKS } from '../js/schedule.js';
 import { records, rpi, confStandings, isFinal, winnerOf, INDEPENDENT } from '../js/standings.js';
 import { regionalSeed, gameVenue, postseasonFinish, postseasonDetail, mcwsPlaces, wsTeams, ncaaProblems, fieldSize, DEFAULT_NCAA, confirmField, setConfHost } from '../js/postseason.js';
 import { recordBook } from '../js/records.js';
@@ -107,7 +107,7 @@ check('schedule: invitationals, then conference play two matches a week', () => 
   for (const teams of Object.values(events)) {
     const confs = [...teams].map(t => s.teams[t].conference).filter(c => c !== INDEPENDENT);
     assert.equal(new Set(confs).size, confs.length, 'no conference rivals in one invitational');
-    assert.ok(teams.size >= 3 && teams.size <= 5);
+    assert.ok(teams.size >= 3 && teams.size <= 4);
   }
   assert.ok(reg.filter(g => g.week === 1).every(g => !g.confGame), 'week 1 is non-conference');
   // Every member of a conference plays the same number of conference matches.
@@ -128,6 +128,11 @@ check('schedule: invitationals, then conference play two matches a week', () => 
   const ch = {};
   for (const g of reg.filter(g => g.confGame)) { ch[g.home] = (ch[g.home] || 0) + 1; assert.ok(g.slot === 0 ? ['Thu', 'Fri'].includes(g.day) : ['Sat', 'Sun'].includes(g.day), `${g.day} slot ${g.slot}`); }
   for (const t of Object.keys(conf)) assert.equal(ch[t] * 2, conf[t], `${t} hosts half its conference matches`);
+  // No doubleheaders: nobody plays twice on one day.
+  const day = new Set();
+  for (const g of reg) for (const t of [g.home, g.away]) { const k = `${t}|${g.week}|${g.day}`; assert.ok(!day.has(k), `two matches: ${k}`); day.add(k); }
+  // Invitationals run Thursday–Saturday or Friday–Sunday.
+  for (const id of Object.keys(events)) { const d = [...new Set(reg.filter(g => g.tourney === id).map(g => g.day))].sort((a, b) => DAY_ORDER[a] - DAY_ORDER[b]).join(); assert.ok(['Thu,Fri,Sat', 'Fri,Sat,Sun'].includes(d), d); }
   // Two conference matches a week, on the conference's days.
   const pw = {};
   for (const g of reg.filter(g => g.confGame)) for (const t of [g.home, g.away]) { const k = `${t}|${g.week}`; pw[k] = (pw[k] || 0) + 1; }

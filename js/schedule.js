@@ -2,13 +2,14 @@
 // season's settings (13 weeks by default, late August to late November).
 //
 // - Non-conference invitationals: in the first weeks (4 by default, a
-//   setting), every team plays a weekend round robin, usually of 4 teams (3
-//   matches: Friday, then two on Saturday). Never two teams from the same
-//   conference, rarely a repeat opponent, and teams lean toward events near
-//   home. One team hosts, so the event is named for it (the "Texas
-//   Invitational"). A big conference needs more events than 4-team ones
-//   allow, so some events have 3 teams; those teams play a third match on
-//   Sunday.
+//   setting), every team plays a weekend round robin of 4 teams, three
+//   matches, one a day: some events run Thursday to Saturday, others Friday
+//   to Sunday (no doubleheaders). Never two teams from the same conference,
+//   rarely a repeat opponent, and teams lean toward events near home. One
+//   team hosts, so the event is named for it (the "Texas Invitational"). A
+//   big conference needs more events than 4-team ones allow, so some events
+//   have 3 teams; each day one of them sits out, and teams sitting out the
+//   same day meet in a third match.
 // - Conference play fills the rest of the season, two matches a week against
 //   different opponents: the first on Thursday or Friday, the second on
 //   Saturday or Sunday (set per conference; Friday and Saturday by default).
@@ -25,9 +26,9 @@
 // When `prev` (last season) is given, conference opponents who met once last
 // year swap home and away.
 
-import { isIndependent } from './standings.js?v=20261031161033';
-import { cityPoint, miles } from './geo.js?v=20261031161033';
-import { rng, shuffle, hashStr } from './util.js?v=20261031161033';
+import { isIndependent } from './standings.js?v=20261101183038';
+import { cityPoint, miles } from './geo.js?v=20261101183038';
+import { rng, shuffle, hashStr } from './util.js?v=20261101183038';
 
 export const DEFAULT_REG_WEEKS = 13;
 export const DEFAULT_TOURNEY_WEEKS = 4;
@@ -295,13 +296,13 @@ export function generateSchedule(season, seed = hashStr(String(season.year)), pr
   const pts = Object.fromEntries(names.map(n => [n, cityPoint(teams[n].city)]));
   const dist = (a, b) => (pts[a] && pts[b] ? miles(pts[a], pts[b]) : 900);
   let tNo = 1;
-  const invitationals = (week, free, small = false) => {
+  const invitationals = (week, free) => {
     // Enough events that no event needs two teams from one conference.
     const confCount = {};
     for (const n of free) if (!isIndependent(teams[n].conference)) confCount[teams[n].conference] = (confCount[teams[n].conference] || 0) + 1;
     // At most five a site (a five-team round robin fills Thursday to Saturday).
-    // Late in the season (teams near the match cap) at most four, three matches each.
-    const E = Math.max(1, Math.floor(free.length / 4), Math.ceil(free.length / (small ? 4 : 5)), ...Object.values(confCount));
+    // At most four teams an event: three matches each, one a day.
+    const E = Math.max(1, Math.floor(free.length / 4), Math.ceil(free.length / 4), ...Object.values(confCount));
     const sizes = eventSizes(free.length, E);
     if (!sizes.length) return free;
     const events = sizes.map(() => []);
@@ -334,16 +335,19 @@ export function generateSchedule(season, seed = hashStr(String(season.year)), pr
       }
       if (!done) leftovers.push(t);
     }
-    const three = [];
+    const byeDay = { Thu: [], Fri: [], Sat: [], Sun: [] };
     for (const ev of events) {
       if (ev.length < 3) { leftovers.push(...ev); continue; }
       const host = [...ev].sort((a, b) => homeCount[a] - homeCount[b] || (r() - 0.5))[0];
       const id = `${season.year}-t${tNo++}`;
       const name = `${host} ${TOURNEY_NAMES[hashStr(`${season.year}|${host}|${week}`) % TOURNEY_NAMES.length]}`;
+      // One match a day, no doubleheaders: some events run Thursday to
+      // Saturday, others Friday to Sunday.
+      const days = r() < 0.5 ? ['Thu', 'Fri', 'Sat'] : ['Fri', 'Sat', 'Sun'];
       const rounds = roundRobin(ev, r);
-      const slots = ev.length >= 5 ? [['Thu', 0], ['Fri', 0], ['Fri', 0.5], ['Sat', 0], ['Sat', 0.5]] : [['Fri', 0], ['Sat', 0], ['Sat', 0.5]];
       rounds.forEach((pairs, k) => {
-        const [day, half] = slots[k] || ['Sun', 0];
+        const day = days[k], half = 0;
+        for (const [a, b] of pairs) if (!a || !b) { const t = a || b; if (t) byeDay[day].push(t); }
         pairs.filter(([a, b]) => a && b).forEach(([a, b], i) => {
           let home, away;
           if (a === host || b === host) { home = host; away = a === host ? b : a; } else [home, away] = orient(a, b);
@@ -351,12 +355,15 @@ export function generateSchedule(season, seed = hashStr(String(season.year)), pr
           add(week, home, away, { day, order: DAY_ORDER[day] + half + i * 0.01, tourney: id, label: name, ...(atHost ? {} : { neutral: true, site: host }) });
         });
       });
-      if (ev.length === 3) three.push(...ev);
     }
-    // Teams in a 3-team event (two matches) and any left over get one more
-    // match on Sunday, so everyone plays about three that weekend.
-    const { pairs } = crossPairs([...three, ...leftovers], teams, met, r);
-    for (const [a, b] of pairs) { const [h, aw] = orient(a, b); add(week, h, aw, { day: 'Sun', order: DAY_ORDER.Sun }); }
+    // A 3-team event has a team sitting out each day; teams sitting out the
+    // same day (and any team left over, on Saturday) meet for a third match,
+    // so everyone plays about three that weekend, one a day.
+    byeDay.Sat.push(...leftovers);
+    for (const [day, pool] of Object.entries(byeDay)) {
+      const { pairs } = crossPairs(pool, teams, met, r);
+      for (const [a, b] of pairs) { const [h, aw] = orient(a, b); add(week, h, aw, { day, order: DAY_ORDER[day] + 0.5 }); }
+    }
   };
 
   const cap = season.settings?.maxMatches ?? DEFAULT_MAX_MATCHES;
@@ -371,8 +378,7 @@ export function generateSchedule(season, seed = hashStr(String(season.year)), pr
     // Teams with no conference matches this week play an invitational (after
     // the invitational weeks, only those with room under the cap).
     const free = names.filter(n => !busy.has(n) && (week <= TW || room(n) >= 3));
-    // Five-team events (four matches) only when nobody would pass the cap.
-    if (free.length >= 3) invitationals(week, free, week > TW || free.some(n => room(n) < 4));
+    if (free.length >= 3) invitationals(week, free);
     if (!busy.size) continue;
     for (let slot = 0; slot < PER_WEEK; slot++) {
       const pairs = slotPairs[`${week}|${slot}`] || [];

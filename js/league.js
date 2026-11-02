@@ -1,14 +1,14 @@
 // League (dynasty) lifecycle: creating the league, saving results,
 // simulating, adding teams and conferences, and rolling into new seasons.
 
-import { START_YEAR, CONFERENCES, COACHES, seedTeams, makeTeam, fillSite } from './data.js?v=20261031161033';
-import { generateSchedule, blankGame, DAY_ORDER, DEFAULT_REG_WEEKS, DEFAULT_TOURNEY_WEEKS, DEFAULT_CONF_MATCHES, DEFAULT_MAX_MATCHES, PER_WEEK, confWeeksFor, confWeeksMax, confRounds, confSeriesCounts, confTarget } from './schedule.js?v=20261031161033';
-import { simulateGame, estimateHitsErrors } from './sim.js?v=20261031161033';
-import { generatePoll, releaseDuePolls } from './polls.js?v=20261031161033';
-import { replayRatings, ensureBase } from './ratings.js?v=20261031161033';
-import { progress, lockField, postWeeks, allEvents, regWeeksOf, DEFAULT_NCAA, OLD_DEFAULT_NCAA, pickConfHosts, postseasonFinish, citySiteNames, wsTeams } from './postseason.js?v=20261031161033';
-import { isFinal, records, INDEPENDENT } from './standings.js?v=20261031161033';
-import { rng, normal, clamp, hashStr } from './util.js?v=20261031161033';
+import { START_YEAR, CONFERENCES, COACHES, seedTeams, makeTeam, fillSite } from './data.js?v=20261101183038';
+import { generateSchedule, blankGame, DAY_ORDER, DEFAULT_REG_WEEKS, DEFAULT_TOURNEY_WEEKS, DEFAULT_CONF_MATCHES, DEFAULT_MAX_MATCHES, PER_WEEK, confWeeksFor, confWeeksMax, confRounds, confSeriesCounts, confTarget } from './schedule.js?v=20261101183038';
+import { simulateGame, estimateHitsErrors } from './sim.js?v=20261101183038';
+import { generatePoll, releaseDuePolls } from './polls.js?v=20261101183038';
+import { replayRatings, ensureBase } from './ratings.js?v=20261101183038';
+import { progress, lockField, postWeeks, allEvents, regWeeksOf, DEFAULT_NCAA, OLD_DEFAULT_NCAA, pickConfHosts, postseasonFinish, citySiteNames, wsTeams } from './postseason.js?v=20261101183038';
+import { isFinal, records, INDEPENDENT } from './standings.js?v=20261101183038';
+import { rng, normal, clamp, hashStr } from './util.js?v=20261101183038';
 
 export const SCHEMA_VERSION = 4;
 
