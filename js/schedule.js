@@ -20,15 +20,16 @@
 //   schedule builder). A conference that needs fewer weeks starts later, and
 //   its teams play invitationals until then; a big one may start in the last
 //   invitational week to fit its 18.
-// - Teams with an open date in a conference week (a bye in an odd-sized
-//   conference, or an independent) are paired with each other for a
-//   non-conference match when they can.
+// - A team with only one conference match in a conference week plays just
+//   that one; no non-conference match is added. A team with no match at all
+//   that week (a bye in both slots, or an independent) is paired with
+//   another such team for one non-conference match when it can be.
 // When `prev` (last season) is given, conference opponents who met once last
 // year swap home and away.
 
-import { isIndependent } from './standings.js?v=20261101194558';
-import { cityPoint, miles } from './geo.js?v=20261101194558';
-import { rng, shuffle, hashStr } from './util.js?v=20261101194558';
+import { isIndependent } from './standings.js?v=20261101210330';
+import { cityPoint, miles } from './geo.js?v=20261101210330';
+import { rng, shuffle, hashStr } from './util.js?v=20261101210330';
 
 export const DEFAULT_REG_WEEKS = 13;
 export const DEFAULT_TOURNEY_WEEKS = 4;
@@ -434,20 +435,20 @@ export function generateSchedule(season, seed = hashStr(String(season.year)), pr
     if (free.length >= 3) invitationals(week, free);
     if (!busy.size) continue;
     for (let slot = 0; slot < PER_WEEK; slot++) {
-      const pairs = slotPairs[`${week}|${slot}`] || [];
-      const inSlot = new Set();
-      for (const [a, b, conf] of pairs) {
+      for (const [a, b, conf] of slotPairs[`${week}|${slot}`] || []) {
         const days = seriesDays(season.settings?.confWeekend?.[conf]);
         add(week, a, b, { ...days[slot], confGame: true, slot });
         confLeft[a]--; confLeft[b]--;
-        inSlot.add(a); inSlot.add(b);
       }
-      // Open dates: teams with conference play this week but not this slot
-      // (byes), plus independents, meet across conferences.
-      const open = names.filter(n => !inSlot.has(n) && (busy.has(n) || (free.length < 3 && !free.length) || isIndependent(teams[n].conference) && !free.includes(n)) && room(n) >= 1);
-      const { pairs: extra } = crossPairs(open, teams, met, r);
-      for (const [a, b] of extra) { const [h, aw] = orient(a, b); add(week, h, aw, { ...seriesDays('fs')[slot], slot }); }
     }
+    // A team with only one conference match this week just plays that one.
+    // A team with no match at all this week (a bye in both slots, or an
+    // independent left out of invitationals) is paired across conferences
+    // for one non-conference match on Saturday, when it can be.
+    const playing = new Set(games.filter(g => g.week === week).flatMap(g => [g.home, g.away]));
+    const idle = names.filter(n => !playing.has(n) && room(n) >= 1);
+    const { pairs: extra } = crossPairs(idle, teams, met, r);
+    for (const [a, b] of extra) { const [h, aw] = orient(a, b); add(week, h, aw, { ...seriesDays('fs')[1], slot: 1 }); }
   }
   return games;
 }

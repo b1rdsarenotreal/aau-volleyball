@@ -150,9 +150,11 @@ format):
   the same number of conference matches, half at home.** A conference that
   needs fewer weeks starts later; one that needs ten weeks starts in the last
   invitational week.
-- Teams with an open date (a bye in an odd-sized conference, or an
-  independent) play a non-conference match when there's an opponent.
-- About **28–30 matches** per team (the most is a setting).
+- A team with a bye in one of a week's two conference slots plays just its
+  one conference match that week, with no non-conference match added. A
+  team with no match at all that week (byes in both slots, or an
+  independent) plays one non-conference match when there's an opponent.
+- About **27–30 matches** per team (the most is a setting).
 
 Standings, tiebreakers, the RPI (25% winning percentage, 50% opponents', 25%
 opponents' opponents'), strength of schedule, quadrants, power ratings and a

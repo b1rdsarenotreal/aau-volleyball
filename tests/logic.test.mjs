@@ -193,6 +193,15 @@ check('schedule: invitationals, then conference play two matches a week', () => 
     assert.ok(teams.size >= 3 && teams.size <= 4);
   }
   assert.ok(reg.filter(g => g.week === 1).every(g => !g.confGame), 'week 1 is non-conference');
+  // A team with conference play in a week plays only conference matches that
+  // week: one match if it has a bye in the other slot, no filler.
+  const confWeek = new Set(reg.filter(g => g.confGame).flatMap(g => [`${g.home}|${g.week}`, `${g.away}|${g.week}`]));
+  const filler = reg.filter(g => !g.confGame && (confWeek.has(`${g.home}|${g.week}`) || confWeek.has(`${g.away}|${g.week}`)));
+  assert.equal(filler.length, 0, `no non-conference filler for teams with a conference match that week (${filler.length})`);
+  const perWeek = {};
+  for (const g of reg) for (const t of [g.home, g.away]) perWeek[`${t}|${g.week}`] = (perWeek[`${t}|${g.week}`] || 0) + 1;
+  const ones = [...confWeek].filter(k => perWeek[k] === 1).length;
+  console.log(`women's conference weeks with a single match: ${ones}`);
   // Every member of a conference plays the same number of conference matches.
   const conf = {};
   for (const g of reg.filter(g => g.confGame)) for (const t of [g.home, g.away]) conf[t] = (conf[t] || 0) + 1;
