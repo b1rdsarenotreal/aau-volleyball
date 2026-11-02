@@ -13,8 +13,8 @@
 // settings, so they carry into later seasons), remove added voters, and
 // edit any published poll.
 
-import { rng, normal, hashStr, clamp } from './util.js?v=20261101191641';
-import { records, rpi, isFinal, winnerOf } from './standings.js?v=20261101191641';
+import { rng, normal, hashStr, clamp } from './util.js?v=20261101192332';
+import { records, rpi, isFinal, winnerOf } from './standings.js?v=20261101192332';
 
 export const DEFAULT_POLL_SIZE = 15;
 export const POLL_SIZES = [10, 15, 20, 25];
@@ -317,6 +317,8 @@ export function releaseDuePolls(season, lastPollWeek) {
   season.polls ||= {};
   for (let w = 1; w <= lastPollWeek; w++) {
     if (season.polls[w]) continue;
+    // A week with no matches has nothing to vote on: skip it, don't stop.
+    if (!season.games.some(g => g.week === w)) continue;
     if (!weekComplete(season, w)) break;
     season.polls[w] = generatePoll(season, w);
     released.push(w);

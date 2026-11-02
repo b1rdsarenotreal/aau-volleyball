@@ -78,10 +78,14 @@ check('men\'s: a separate league of 14, two conferences of 7, a 6-team field', (
   assert.equal(seen.size, 49);
   assert.ok(Math.max(...nc.map(g => g.week)) < Math.min(...mreg.filter(g => g.confGame).map(g => g.week)));
   assert.equal(ms.settings.mcwsName, 'AAU National Tournament');
+  // Spring sport: the season starts in week 1 and is only as long as it needs.
+  assert.equal(Math.min(...mreg.map(g => g.week)), 1);
+  assert.equal(ms.regWeeks, Math.max(...mreg.map(g => g.week)));
   // Postseason: 6 teams at one site, seeds 1 and 2 wait; 3 v 6 and 4 v 5 first.
   simGames(ms, undefined, { autoLock: true });
   assert.equal(ms.phase, 'complete');
   assert.equal(ms.post.field.length, 6);
+  for (let w = 1; w <= ms.regWeeks; w++) assert.ok(ms.polls[w], `men's poll after week ${w}`);
   assert.deepEqual(ms.post.regionals, []);
   const seed = t => ms.post.field.find(f => f.team === t).seed;
   const first = ms.games.filter(g => g.type === 'mcws' && g.node.startsWith('R1-'));
@@ -111,6 +115,19 @@ check('logos from the AAU Dynasty', () => {
   assert.equal(s0.teams.Texas.logoOverride, 'data:image/png;base64,AAAA');
   assert.equal(L.conferences['Ivy League'].logo, 'https://e.com/ivy.png');
   assert.throws(() => readAauLogos({ seasons: {} }));
+});
+
+check('a men\'s save that started in week 3 moves up to week 1 and gets its polls', () => {
+  const M = newLeague({ side: 'men' }), ms = currentSeason(M);
+  for (const g of ms.games) g.week += 2;
+  ms.regWeeks += 2;
+  simGames(ms, g => g.type === 'regular' && g.week === 3);
+  assert.ok(ms.polls[3], 'empty weeks 1 and 2 no longer hold up the polls');
+  migrateLeague(M);
+  assert.equal(Math.min(...ms.games.map(g => g.week)), 1);
+  assert.ok(ms.polls[1] && !ms.polls[3], 'the poll moved with its week');
+  simGames(ms, g => g.type === 'regular' && g.week === 2);
+  assert.ok(ms.polls[2], 'week 2 poll after the move');
 });
 
 check('matches are legal best-of-five volleyball', () => {

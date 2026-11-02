@@ -39,8 +39,10 @@ confirmed, so that job starts open). More schools can start men's programs:
 add them as teams in the offseason. Men's schedule (the default, changeable in **Settings → Schedule format →
 Non-conference schedule**): everyone in your conference twice, home and
 away, and everyone in the other conference once, 19 matches. The
-non-conference matches come first (Friday and Saturday, ending the week
-before conference play), then the conference. The AAU National Tournament is **6 teams, single elimination at
+non-conference matches come first (Friday and Saturday, from week 1), then
+the conference: 11 weeks, then the postseason. Men's volleyball is a spring
+sport, so its calendar starts the second week of January (women's starts the
+last week of August), and the poll comes out after every week. The AAU National Tournament is **6 teams, single elimination at
 one site** (at Pauley Pavilion; change it in
 Settings): 3 v 6 and 4 v 5 on Wednesday, the 1 and 2 seeds waiting for them
 in Friday's semifinals, the final Sunday.

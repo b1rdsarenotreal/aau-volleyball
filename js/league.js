@@ -1,15 +1,15 @@
 // League (dynasty) lifecycle: creating the league, saving results,
 // simulating, adding teams and conferences, and rolling into new seasons.
 
-import { DEFAULT_LOGOS, AAU_LOGO_SET } from './logo-import.js?v=20261101191641';
-import { START_YEAR, CONFERENCES, COACHES, SIDES, sideOf, conferencesFor, seedTeams, makeTeam, fillSite } from './data.js?v=20261101191641';
-import { generateSchedule, blankGame, DAY_ORDER, DEFAULT_REG_WEEKS, DEFAULT_TOURNEY_WEEKS, DEFAULT_CONF_MATCHES, DEFAULT_MAX_MATCHES, PER_WEEK, confWeeksFor, confWeeksMax, confRounds, confSeriesCounts, confTarget } from './schedule.js?v=20261101191641';
-import { simulateGame, estimateHitsErrors } from './sim.js?v=20261101191641';
-import { generatePoll, releaseDuePolls } from './polls.js?v=20261101191641';
-import { replayRatings, ensureBase } from './ratings.js?v=20261101191641';
-import { progress, lockField, postWeeks, allEvents, regWeeksOf, DEFAULT_NCAA, OLD_DEFAULT_NCAA, pickConfHosts, postseasonFinish, citySiteNames, wsTeams } from './postseason.js?v=20261101191641';
-import { isFinal, records, INDEPENDENT } from './standings.js?v=20261101191641';
-import { rng, normal, clamp, hashStr } from './util.js?v=20261101191641';
+import { DEFAULT_LOGOS, AAU_LOGO_SET } from './logo-import.js?v=20261101192332';
+import { START_YEAR, CONFERENCES, COACHES, SIDES, sideOf, conferencesFor, seedTeams, makeTeam, fillSite } from './data.js?v=20261101192332';
+import { generateSchedule, blankGame, DAY_ORDER, DEFAULT_REG_WEEKS, DEFAULT_TOURNEY_WEEKS, DEFAULT_CONF_MATCHES, DEFAULT_MAX_MATCHES, PER_WEEK, confWeeksFor, confWeeksMax, confRounds, confSeriesCounts, confTarget } from './schedule.js?v=20261101192332';
+import { simulateGame, estimateHitsErrors } from './sim.js?v=20261101192332';
+import { generatePoll, releaseDuePolls } from './polls.js?v=20261101192332';
+import { replayRatings, ensureBase } from './ratings.js?v=20261101192332';
+import { progress, lockField, postWeeks, allEvents, regWeeksOf, DEFAULT_NCAA, OLD_DEFAULT_NCAA, pickConfHosts, postseasonFinish, citySiteNames, wsTeams } from './postseason.js?v=20261101192332';
+import { isFinal, records, INDEPENDENT } from './standings.js?v=20261101192332';
+import { rng, normal, clamp, hashStr } from './util.js?v=20261101192332';
 
 export const SCHEMA_VERSION = 4;
 
@@ -614,6 +614,21 @@ export function migrateLeague(league) {
     if (se.settings.nonConf) continue;
     se.settings.nonConf = 'once';
     if (se.year === league.currentYear && !se.games.some(g => g.type === 'regular' && isFinal(g)) && !league.draft) { rebuildSchedule(se, league.seasons[se.year - 1] || null); league.migrated = true; }
+  }
+  // Men's seasons scheduled before they started in week 1 (empty opening
+  // weeks stopped the polls): move every match and poll up so week 1 has
+  // matches. Played results stay as they are, just renumbered.
+  if (!women) for (const se of Object.values(league.seasons || {})) {
+    const reg = se.games.filter(g => g.type === 'regular');
+    if (!reg.length) continue;
+    const shift = Math.min(...reg.map(g => g.week)) - 1;
+    if (shift <= 0) continue;
+    for (const g of se.games) g.week -= shift;
+    const polls = {};
+    for (const [k, v] of Object.entries(se.polls || {})) polls[k === 'final' || +k === 0 ? k : String(Math.max(1, +k - shift))] = v;
+    se.polls = polls;
+    se.regWeeks = Math.max(1, (se.regWeeks ?? Math.max(...reg.map(g => g.week)) + shift) - shift);
+    league.migrated = true;
   }
   // A dynasty that hasn't played its first match takes the current alignment.
   if (women && league.alignment !== ALIGNMENT && league.seasons && canApplyAlignment(league) && league.currentYear === START_YEAR) {
