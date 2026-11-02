@@ -6,6 +6,7 @@ import { DAY_ORDER, generateSchedule, confRounds, confSeriesCounts, eventSizes, 
 import { records, rpi, confStandings, isFinal, winnerOf, INDEPENDENT } from '../js/standings.js';
 import { regionalSeed, gameVenue, postseasonFinish, postseasonDetail, mcwsPlaces, wsTeams, ncaaProblems, fieldSize, DEFAULT_NCAA, confirmField, setConfHost } from '../js/postseason.js';
 import { recordBook } from '../js/records.js';
+import { readAauLogos, applyAauLogos } from '../js/logo-import.js';
 import { seedTeams, splitOvr, COACHES, CONFERENCES } from '../js/data.js';
 import { existsSync } from 'node:fs';
 import { rng } from '../js/util.js';
@@ -89,6 +90,27 @@ check('men\'s: a separate league of 14, two conferences of 7, a 6-team field', (
   assert.equal(postseasonFinish(ms, ms.post.champion), 'National champion');
   // The women's league is untouched by the men's.
   assert.equal(Object.keys(currentSeason(newLeague()).teams).length, 72);
+});
+
+check('logos from the AAU Dynasty', () => {
+  const L = newLeague(), s0 = currentSeason(L);
+  assert.ok(s0.teams.Caltech.logoOverride.includes('Caltech_beavers'), 'new dynasties start with the AAU Dynasty logos');
+  assert.ok(currentSeason(newLeague({ side: 'men' })).teams.Toronto.logoOverride.includes('Varsity_Blues'));
+  // An older save picks them up, but keeps a logo the commissioner set.
+  delete L.logoSet; s0.teams.Caltech.logoOverride = null; s0.teams.NYU.logoOverride = 'https://example.com/mine.png';
+  migrateLeague(L);
+  assert.ok(s0.teams.Caltech.logoOverride.includes('Caltech_beavers'));
+  assert.equal(s0.teams.NYU.logoOverride, 'https://example.com/mine.png');
+  // A newer AAU Dynasty backup: its school and conference logos win.
+  const backup = { schools: [{ id: 'tex', name: 'University of Texas at Austin', short: 'Texas', logo: 'data:image/png;base64,AAAA' }, { id: 'x', name: 'Nowhere U', short: 'Nowhere', logo: 'https://e.com/n.png' }, { id: 'yale', short: 'Yale' }],
+    conferences: { c1: { name: 'Ivy League', logo: 'https://e.com/ivy.png' } } };
+  const found = readAauLogos(backup);
+  assert.deepEqual(Object.keys(found.schools).sort(), ['Nowhere', 'Nowhere U', 'Texas', 'University of Texas at Austin']);
+  const got = applyAauLogos(L, found);
+  assert.deepEqual(got, { teams: ['Texas'], conferences: ['Ivy League'] });
+  assert.equal(s0.teams.Texas.logoOverride, 'data:image/png;base64,AAAA');
+  assert.equal(L.conferences['Ivy League'].logo, 'https://e.com/ivy.png');
+  assert.throws(() => readAauLogos({ seasons: {} }));
 });
 
 check('matches are legal best-of-five volleyball', () => {

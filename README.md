@@ -209,9 +209,18 @@ coaching records.
 
 ## Logos
 
-From the college football logo list MCS uses (ESPN logos), plus ESPN's
-women's college volleyball team list for schools without football. Both are
-fetched by the browser and cached. Any team can get its own logo on its page.
+Logos set in the owner's **AAU Dynasty** come first: every team starts with
+its AAU Dynasty logo where it has one (Brandeis, Caltech, Emory, George
+Washington, McGill, NYU, Toronto and the UC schools from the November 2026
+backup), on both the women's and men's sides. To bring in newer ones, use
+**Settings → Backups → Logos from an AAU Dynasty backup** and pick the AAU
+Dynasty's downloaded backup: every school logo (a link or an uploaded image)
+and conference logo in it goes onto the matching team and conference here.
+
+Everyone else gets a logo from the college football logo list MCS uses (ESPN
+logos), plus ESPN's women's college volleyball team list for schools without
+football, fetched by the browser and cached. Any team can get its own logo on
+its page, and any conference on its page.
 
 ## Development
 

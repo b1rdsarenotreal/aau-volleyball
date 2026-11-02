@@ -1,17 +1,18 @@
 // League pages: teams, team profiles, conferences, history, settings.
 
-import { ctx, S, app, modal, $, $$, esc, toast, changed, persist, flushSave, cache, team, teamInfo, logoImg, teamOptions, teamHref, confLogo, confHref, confInfo, confColor, imageFileToDataUrl, readableOn, openGame, resultText } from './ui.js?v=20261101191240';
-import { isFinal, winnerOf, records, rpi, confStandings, regSeasonChamp, regSeasonChamps, isIndependent } from './standings.js?v=20261101191240';
-import { ovr } from './sim.js?v=20261101191240';
-import { latestPoll, pollRankMap, pollSizeOf, POLL_SIZES, DEFAULT_POLL_SIZE } from './polls.js?v=20261101191240';
-import { addTeam, removeTeam, renameTeam, addConference, renameConference, deleteConference, rebuildSchedule, startNextSeason, weekName, newLeague, beginOffseason, draftRemoveTeam, draftRestoreTeam, draftWarnings, coachName, coachSchool, hireCoach, newCoach, availableCoaches, backfillHitsErrors, placeRemaining, clearPoints, pointsLeft, migrateLeague, applyAlignment, canApplyAlignment, syncCoachBonus, devTotal, coachResumes, coachPrestige, prestigeLabel, coachBonus, programPrestiges, programLabel, fitLabel } from './league.js?v=20261101191240';
-import { hotSeat, HEAT } from './hotseat.js?v=20261101191240';
-import { setRating } from './ratings.js?v=20261101191240';
-import { confFormatName, postseasonFinish, postseasonDetail, postseasonRecord, wsTeams, postWeeks, regWeeksOf, ncaaConfig, ncaaProblems, fieldSize, hasSupers, formatSummary, proposeField, DEFAULT_NCAA, mcwsVenue, allEvents, gameVenue } from './postseason.js?v=20261101191240';
-import { DEFAULT_TOURNEY_WEEKS, DEFAULT_REG_WEEKS, DEFAULT_CONF_MATCHES, DEFAULT_MAX_MATCHES } from './schedule.js?v=20261101191240';
-import { exportLeague, clearLeague } from './store.js?v=20261101191240';
-import { clamp, fmtPct } from './util.js?v=20261101191240';
-import { recordBook, teamPollHistory, headToHead } from './records.js?v=20261101191240';
+import { readAauLogos, applyAauLogos } from './logo-import.js?v=20261101191641';
+import { ctx, S, app, modal, $, $$, esc, toast, changed, persist, flushSave, cache, team, teamInfo, logoImg, teamOptions, teamHref, confLogo, confHref, confInfo, confColor, imageFileToDataUrl, readableOn, openGame, resultText } from './ui.js?v=20261101191641';
+import { isFinal, winnerOf, records, rpi, confStandings, regSeasonChamp, regSeasonChamps, isIndependent } from './standings.js?v=20261101191641';
+import { ovr } from './sim.js?v=20261101191641';
+import { latestPoll, pollRankMap, pollSizeOf, POLL_SIZES, DEFAULT_POLL_SIZE } from './polls.js?v=20261101191641';
+import { addTeam, removeTeam, renameTeam, addConference, renameConference, deleteConference, rebuildSchedule, startNextSeason, weekName, newLeague, beginOffseason, draftRemoveTeam, draftRestoreTeam, draftWarnings, coachName, coachSchool, hireCoach, newCoach, availableCoaches, backfillHitsErrors, placeRemaining, clearPoints, pointsLeft, migrateLeague, applyAlignment, canApplyAlignment, syncCoachBonus, devTotal, coachResumes, coachPrestige, prestigeLabel, coachBonus, programPrestiges, programLabel, fitLabel } from './league.js?v=20261101191641';
+import { hotSeat, HEAT } from './hotseat.js?v=20261101191641';
+import { setRating } from './ratings.js?v=20261101191641';
+import { confFormatName, postseasonFinish, postseasonDetail, postseasonRecord, wsTeams, postWeeks, regWeeksOf, ncaaConfig, ncaaProblems, fieldSize, hasSupers, formatSummary, proposeField, DEFAULT_NCAA, mcwsVenue, allEvents, gameVenue } from './postseason.js?v=20261101191641';
+import { DEFAULT_TOURNEY_WEEKS, DEFAULT_REG_WEEKS, DEFAULT_CONF_MATCHES, DEFAULT_MAX_MATCHES } from './schedule.js?v=20261101191641';
+import { exportLeague, clearLeague } from './store.js?v=20261101191641';
+import { clamp, fmtPct } from './util.js?v=20261101191641';
+import { recordBook, teamPollHistory, headToHead } from './records.js?v=20261101191641';
 
 const ui = { confFilter: '', ncaaDraft: null, teamSort: { k: 'ovr', dir: -1 }, coachSort: { k: 'now', dir: -1 }, teamTab: 'season', h2hSort: { k: 'g', dir: -1 }, h2hFilter: 'all', memberSort: { k: 'titles', dir: -1 } };
 
@@ -998,6 +999,8 @@ export function renderSettings() {
       <div class="card stack"><h2>Backups</h2>
         <p class="small muted">The dynasty is saved in this browser. Download a backup to keep a copy or move it to another device.</p>
         <div class="row"><button class="btn" id="s-export">Download backup</button><label class="btn">Restore backup <input type="file" id="s-import" accept="application/json,.json" hidden></label></div>
+        <label class="btn">Logos from an AAU Dynasty backup <input type="file" id="s-aaulogos" accept="application/json,.json" hidden></label>
+        <p class="small muted">Uses every school and conference logo set in your AAU Dynasty (links or uploaded images) for the matching teams and conferences here, replacing their current logos.</p>
         <button class="btn danger" id="s-reset">Start over with a new league</button>
       </div>
     </div>`;
@@ -1042,6 +1045,18 @@ export function renderSettings() {
     changed(); toast('Conferences set and a new schedule built.');
   };
   $('#s-export').onclick = () => exportLeague(L);
+  $('#s-aaulogos').onchange = async e => {
+    try {
+      const found = readAauLogos(JSON.parse(await e.target.files[0].text()));
+      const n = Object.keys(found.schools).length + Object.keys(found.conferences).length;
+      if (!n) throw new Error('That AAU Dynasty backup has no logos set.');
+      const got = applyAauLogos(L, found);
+      if (!got.teams.length && !got.conferences.length) throw new Error('None of its logos match a team or conference here.');
+      changed({ progress: false });
+      toast(`Logos from the AAU Dynasty: ${got.teams.length} team${got.teams.length === 1 ? '' : 's'}${got.conferences.length ? ` and ${got.conferences.length} conference${got.conferences.length === 1 ? '' : 's'}` : ''}.`);
+    } catch (err) { toast(err.message, true); }
+    e.target.value = '';
+  };
   $('#s-import').onchange = async e => {
     try {
       const data = JSON.parse(await e.target.files[0].text());

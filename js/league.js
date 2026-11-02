@@ -1,14 +1,15 @@
 // League (dynasty) lifecycle: creating the league, saving results,
 // simulating, adding teams and conferences, and rolling into new seasons.
 
-import { START_YEAR, CONFERENCES, COACHES, SIDES, sideOf, conferencesFor, seedTeams, makeTeam, fillSite } from './data.js?v=20261101191240';
-import { generateSchedule, blankGame, DAY_ORDER, DEFAULT_REG_WEEKS, DEFAULT_TOURNEY_WEEKS, DEFAULT_CONF_MATCHES, DEFAULT_MAX_MATCHES, PER_WEEK, confWeeksFor, confWeeksMax, confRounds, confSeriesCounts, confTarget } from './schedule.js?v=20261101191240';
-import { simulateGame, estimateHitsErrors } from './sim.js?v=20261101191240';
-import { generatePoll, releaseDuePolls } from './polls.js?v=20261101191240';
-import { replayRatings, ensureBase } from './ratings.js?v=20261101191240';
-import { progress, lockField, postWeeks, allEvents, regWeeksOf, DEFAULT_NCAA, OLD_DEFAULT_NCAA, pickConfHosts, postseasonFinish, citySiteNames, wsTeams } from './postseason.js?v=20261101191240';
-import { isFinal, records, INDEPENDENT } from './standings.js?v=20261101191240';
-import { rng, normal, clamp, hashStr } from './util.js?v=20261101191240';
+import { DEFAULT_LOGOS, AAU_LOGO_SET } from './logo-import.js?v=20261101191641';
+import { START_YEAR, CONFERENCES, COACHES, SIDES, sideOf, conferencesFor, seedTeams, makeTeam, fillSite } from './data.js?v=20261101191641';
+import { generateSchedule, blankGame, DAY_ORDER, DEFAULT_REG_WEEKS, DEFAULT_TOURNEY_WEEKS, DEFAULT_CONF_MATCHES, DEFAULT_MAX_MATCHES, PER_WEEK, confWeeksFor, confWeeksMax, confRounds, confSeriesCounts, confTarget } from './schedule.js?v=20261101191641';
+import { simulateGame, estimateHitsErrors } from './sim.js?v=20261101191641';
+import { generatePoll, releaseDuePolls } from './polls.js?v=20261101191641';
+import { replayRatings, ensureBase } from './ratings.js?v=20261101191641';
+import { progress, lockField, postWeeks, allEvents, regWeeksOf, DEFAULT_NCAA, OLD_DEFAULT_NCAA, pickConfHosts, postseasonFinish, citySiteNames, wsTeams } from './postseason.js?v=20261101191641';
+import { isFinal, records, INDEPENDENT } from './standings.js?v=20261101191641';
+import { rng, normal, clamp, hashStr } from './util.js?v=20261101191641';
 
 export const SCHEMA_VERSION = 4;
 
@@ -40,7 +41,7 @@ export function newLeague({ side = 'women', name = SIDES[side === 'men' ? 'men' 
     schema: SCHEMA_VERSION, name, currentYear: year,
     conferences: JSON.parse(JSON.stringify(conferences)),
     coaches: {}, nextCoachId: 1,
-    seasons: { [year]: season }, side, ...(side === 'women' ? { alignment: ALIGNMENT } : {}),
+    seasons: { [year]: season }, side, logoSet: AAU_LOGO_SET, ...(side === 'women' ? { alignment: ALIGNMENT } : {}),
   };
   ensureIndependent(league);
   for (const t of Object.values(teams)) { t.coachId = t.coach ? newCoach(league, t.coach) : null; delete t.coach; }
@@ -598,6 +599,12 @@ export function migrateLeague(league) {
   // Conference matches are Thursday/Friday then Saturday/Sunday; the old
   // Wednesday and Saturday choice becomes Friday and Saturday.
   for (const se of Object.values(league.seasons || {})) for (const [c, f] of Object.entries(se.settings?.confWeekend || {})) if (f === 'ws') se.settings.confWeekend[c] = 'fs';
+  // The AAU Dynasty's logos, for teams that don't have their own yet.
+  if (league.logoSet !== AAU_LOGO_SET) {
+    const sets = [...Object.values(league.seasons || {}).map(se => se.teams), ...(league.draft ? [league.draft.teams] : [])];
+    for (const tset of sets) for (const t of Object.values(tset || {})) if (!t.logoOverride && DEFAULT_LOGOS[t.school]) t.logoOverride = DEFAULT_LOGOS[t.school];
+    league.logoSet = AAU_LOGO_SET; league.migrated = true;
+  }
   // "NCAA" became the AAU National Tournament.
   for (const se of Object.values(league.seasons || {})) if (/^NCAA\b/.test(se.settings?.mcwsName || '')) se.settings.mcwsName = 'AAU National Tournament';
   // Men's: everyone in the conference twice and everyone else once, unless

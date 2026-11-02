@@ -20,7 +20,8 @@
 // The rest (NYU, Brandeis, Johns Hopkins, MIT, Caltech, UC Santa Cruz, McGill,
 // Toronto) are estimates from each program's usual level.
 
-import { MEN_CONFERENCES, MEN_TEAMS, MEN_COACHES } from './data-men.js?v=20261101191240';
+import { DEFAULT_LOGOS } from './logo-import.js?v=20261101191641';
+import { MEN_CONFERENCES, MEN_TEAMS, MEN_COACHES } from './data-men.js?v=20261101191641';
 
 export const START_YEAR = 2030;
 
@@ -321,11 +322,14 @@ export function seedTeams(side = 'women') {
   if (side === 'men') {
     for (const [school, conference, abbr, mascot, color, altColor, ovr, stadium, city] of MEN_TEAMS) {
       teams[school] = makeTeam({ school, conference, abbr, mascot, coach: MEN_COACHES[school] || '', color, altColor, stadium, city, ...splitOvr(school, ovr) });
+      teams[school].logoOverride = DEFAULT_LOGOS[school] || null;
     }
     return teams;
   }
   for (const [school, conference, abbr, mascot, color, altColor, ovr] of T) {
     teams[school] = makeTeam({ school, conference, abbr, mascot, coach: COACHES[school] || '', color, altColor, ...splitOvr(school, ovr) });
+    // The AAU Dynasty's logos win over the automatic logo lists.
+    teams[school].logoOverride = DEFAULT_LOGOS[school] || null;
   }
   return teams;
 }
