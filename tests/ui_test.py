@@ -84,6 +84,29 @@ with sync_playwright() as p:
     t = visit(pg, "#/records")
     assert "Most kills in a match" in t and "Runs" not in t
 
+    # Men's: a separate dynasty behind the switch; the women's one is kept.
+    women_champ = pg.evaluate("() => document.querySelector('.banner .big')?.textContent || ''")
+    visit(pg, "#/home")
+    pg.click('#side-switch [data-side="men"]')
+    pg.wait_for_function("document.getElementById('league-name').textContent === \"AAU Men's Volleyball\"", timeout=15000)
+    t = visit(pg, "#/teams", "g-men-teams")
+    assert "Penn State" in t and "Texas" not in t
+    t = visit(pg, "#/conferences", "g-men-conferences")
+    assert "Pacific Volleyball Federation" in t and "Eastern Volleyball Association" in t
+    visit(pg, "#/schedule")
+    pg.click("text=Sim rest of regular season"); pg.wait_for_timeout(1500)
+    visit(pg, "#/postseason")
+    pg.click("#ps-all"); pg.wait_for_timeout(1500)
+    t = visit(pg, "#/postseason", "g-men-postseason")
+    assert "National Champion" in t
+    assert pg.locator('[data-pt="regionals"]').count() == 0, "no regionals for men"
+    for h in ["#/home", "#/standings", "#/rankings", "#/records", "#/history", "#/settings"]:
+        visit(pg, h, "g-men-" + h.strip("#/"))
+    pg.click('#side-switch [data-side="women"]')
+    pg.wait_for_function("document.getElementById('league-name').textContent === 'AAU Volleyball'", timeout=15000)
+    t = visit(pg, "#/postseason")
+    assert "National Champion" in t and (not women_champ or women_champ in t), "the women's dynasty is unchanged"
+
     pg.set_viewport_size({"width": 390, "height": 800})
     for h in ["#/home", "#/schedule", "#/standings"]:
         visit(pg, h)

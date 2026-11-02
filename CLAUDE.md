@@ -1,9 +1,10 @@
 # AAU Volleyball
 
-A women's college volleyball dynasty for all 72 AAU schools with women's
-volleyball (57 Division I, 13 Division III, 2 Canadian), set in 2030. It
-started as a copy of the owner's MCS Dynasty (softball) and keeps its engine
-and features, adapted to volleyball.
+A college volleyball dynasty set in 2030, women's and men's as two separate
+dynasties behind a switch in the top bar: women's has all 72 AAU schools
+with women's volleyball (57 Division I, 13 Division III, 2 Canadian), men's
+the 14 with men's volleyball. It started as a copy of the owner's MCS
+Dynasty (softball) and keeps its engine and features, adapted to volleyball.
 
 **It is not synced with MCS Dynasty, SACAA Dynasty or AAU Dynasty.** Changes
 here aren't ported to those repos, and theirs aren't ported here, unless the
@@ -24,11 +25,18 @@ include this repo.)
   Regional and Super Regional. User-facing text never says MCWS, series,
   innings, runs or hits.
 - On-screen text says "match", not "game".
-- Teams start in the owner's eight conferences (the AAU Dynasty alignment),
+- Women's and men's: `league.side` is 'women' (or missing, older saves) or
+  'men'. Each side has its own save key (`js/store.js`), seed data
+  (`js/data.js`, `js/data-men.js`), default settings (`defaultSettings(side)`:
+  men's NCAA is `regionals: 0`, a 6-team single-elimination field at one
+  site) and migrations (the women's conference alignment never touches the
+  men's league). Keep features shared; put differences in data or settings.
+- Women's teams start in the owner's eight conferences (the AAU Dynasty alignment),
   set in `js/data.js` with drawn logos (`tools/conf_logos.py`, transparent
   SVGs in `img/conf/`); ratings come from the 2025 season
   (Wikipedia, school sites), with D-III and Canadian programs at 42–50.
-  Coaches are the real 2026 head coaches.
+  Coaches are the real 2026 head coaches. Men's teams start in two men's-only
+  conferences (PVF and EVA), rated from the 2026 season.
 
 ## Before every commit
 

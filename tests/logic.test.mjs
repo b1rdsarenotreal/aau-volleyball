@@ -53,6 +53,38 @@ check('an unstarted saved dynasty picks up the commissioner\'s conferences', () 
   assert.equal(s2.teams.Texas.conference, 'Big Ten');
 });
 
+check('men\'s: a separate league of 14, two conferences of 7, a 6-team field', () => {
+  const M = newLeague({ side: 'men' }), ms = currentSeason(M);
+  assert.equal(M.side, 'men');
+  assert.equal(M.name, "AAU Men's Volleyball");
+  assert.equal(Object.keys(ms.teams).length, 14);
+  const count = {};
+  for (const t of Object.values(ms.teams)) count[t.conference] = (count[t.conference] || 0) + 1;
+  assert.deepEqual(count, { 'Pacific Volleyball Federation': 7, 'Eastern Volleyball Association': 7 });
+  assert.ok(Object.keys(M.conferences).every(c => c === 'Independent' || existsSync(new URL(`../${M.conferences[c].logo}`, import.meta.url))));
+  assert.equal(ms.teams.Stanford.stadium, 'Burnham Pavilion');
+  assert.equal(M.coaches[ms.teams['Penn State'].coachId].name, 'Colin McMillan');
+  assert.equal(ms.teams['UC Santa Cruz'].coachId, null, 'unconfirmed coach: open job');
+  // Schedule: 12 conference matches (everyone home and away), half at home, no doubleheaders.
+  const mreg = ms.games.filter(g => g.type === 'regular');
+  const c = {}, h = {}, tot = {}, day = new Set();
+  for (const g of mreg) for (const t of [g.home, g.away]) { tot[t] = (tot[t] || 0) + 1; const k = `${t}|${g.week}|${g.day}`; assert.ok(!day.has(k), k); day.add(k); }
+  for (const g of mreg.filter(g => g.confGame)) { c[g.home] = (c[g.home] || 0) + 1; c[g.away] = (c[g.away] || 0) + 1; h[g.home] = (h[g.home] || 0) + 1; }
+  for (const t of Object.keys(ms.teams)) { assert.equal(c[t], 12); assert.equal(h[t], 6); assert.ok(tot[t] >= 24 && tot[t] <= 30, `${t} ${tot[t]}`); }
+  // Postseason: 6 teams at one site, seeds 1 and 2 wait; 3 v 6 and 4 v 5 first.
+  simGames(ms, undefined, { autoLock: true });
+  assert.equal(ms.phase, 'complete');
+  assert.equal(ms.post.field.length, 6);
+  assert.deepEqual(ms.post.regionals, []);
+  const seed = t => ms.post.field.find(f => f.team === t).seed;
+  const first = ms.games.filter(g => g.type === 'mcws' && g.node.startsWith('R1-'));
+  assert.deepEqual(first.map(g => seed(g.home) + seed(g.away)).sort(), [9, 9]);
+  assert.ok(first.every(g => ![1, 2].includes(seed(g.home)) && ![1, 2].includes(seed(g.away))));
+  assert.equal(postseasonFinish(ms, ms.post.champion), 'National champion');
+  // The women's league is untouched by the men's.
+  assert.equal(Object.keys(currentSeason(newLeague()).teams).length, 72);
+});
+
 check('matches are legal best-of-five volleyball', () => {
   const r = rng(3);
   for (let i = 0; i < 2000; i++) {

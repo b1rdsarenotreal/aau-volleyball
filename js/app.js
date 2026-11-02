@@ -1,12 +1,12 @@
 // App shell: loading the dynasty, the top bar, and page routing.
 
-import { loadLeague, saveLeague } from './store.js?v=20261101183038';
-import { loadLogoTable } from './logos.js?v=20261101183038';
-import { newLeague, afterChange, migrateLeague } from './league.js?v=20261101183038';
-import { ctx, app, cache, persist, esc } from './ui.js?v=20261101183038';
-import { renderHome, renderSchedule, renderStandings, renderRankings, renderPostseason, resetSeasonUi } from './views-season.js?v=20261101183038';
-import { renderRecords } from './views-records.js?v=20261101183038';
-import { renderTeams, renderTeamPage, renderConferences, renderConferencePage, renderHistory, renderSettings, renderOffseason, renderCoaches, renderCoachPage } from './views-league.js?v=20261101183038';
+import { loadLeague, saveLeague, currentSide, setSide } from './store.js?v=20261101190736';
+import { loadLogoTable } from './logos.js?v=20261101190736';
+import { newLeague, afterChange, migrateLeague } from './league.js?v=20261101190736';
+import { ctx, app, cache, persist, esc, flushSave } from './ui.js?v=20261101190736';
+import { renderHome, renderSchedule, renderStandings, renderRankings, renderPostseason, resetSeasonUi } from './views-season.js?v=20261101190736';
+import { renderRecords } from './views-records.js?v=20261101190736';
+import { renderTeams, renderTeamPage, renderConferences, renderConferencePage, renderHistory, renderSettings, renderOffseason, renderCoaches, renderCoachPage } from './views-league.js?v=20261101190736';
 
 const VIEWS = { home: 'Home', schedule: 'Schedule', standings: 'Standings', rankings: 'Rankings', postseason: 'Postseason', offseason: 'Offseason', teams: 'Teams', coaches: 'Coaches', conferences: 'Conferences', history: 'History', records: 'Records', settings: 'Settings' };
 const SUBVIEWS = { team: 'teams', conference: 'conferences', coach: 'coaches' };
@@ -22,6 +22,18 @@ function routeArg() { return decodeURIComponent(location.hash.replace(/^#\/?/, '
 function renderChrome() {
   const L = ctx.league;
   document.getElementById('league-name').textContent = L.name;
+  // Women's / men's switch: two separate dynasties, each with its own save.
+  const side = L.side === 'men' ? 'men' : 'women';
+  const sw = document.getElementById('side-switch');
+  sw.innerHTML = [['women', "Women's"], ['men', "Men's"]].map(([k, l]) => `<button type="button" data-side="${k}" class="${k === side ? 'active' : ''}" aria-pressed="${k === side}">${l}</button>`).join('');
+  sw.querySelectorAll('[data-side]').forEach(b => (b.onclick = async () => {
+    if (b.dataset.side === side) return;
+    await flushSave();
+    setSide(b.dataset.side);
+    location.hash = '#/home';
+    location.reload();
+  }));
+  document.body.dataset.side = side;
   document.title = L.name;
   const v = currentView();
   const offOpen = L.seasons[L.currentYear].phase === 'complete';
@@ -44,11 +56,13 @@ window.addEventListener('hashchange', () => { const v = currentView(); render();
 
 async function boot() {
   ctx.render = render;
-  let league = await loadLeague();
+  const side = currentSide();
+  let league = await loadLeague(side);
   if (!league || !league.seasons) {
-    league = newLeague();
+    league = newLeague({ side });
     await saveLeague(league);
   }
+  if (side === 'men') league.side = 'men';
   migrateLeague(league);
   if (league.migrated) { delete league.migrated; await saveLeague(league); }
   if (!league.seasons[league.viewYear]) league.viewYear = league.currentYear;

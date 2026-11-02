@@ -1,22 +1,25 @@
 // League (dynasty) lifecycle: creating the league, saving results,
 // simulating, adding teams and conferences, and rolling into new seasons.
 
-import { START_YEAR, CONFERENCES, COACHES, seedTeams, makeTeam, fillSite } from './data.js?v=20261101183038';
-import { generateSchedule, blankGame, DAY_ORDER, DEFAULT_REG_WEEKS, DEFAULT_TOURNEY_WEEKS, DEFAULT_CONF_MATCHES, DEFAULT_MAX_MATCHES, PER_WEEK, confWeeksFor, confWeeksMax, confRounds, confSeriesCounts, confTarget } from './schedule.js?v=20261101183038';
-import { simulateGame, estimateHitsErrors } from './sim.js?v=20261101183038';
-import { generatePoll, releaseDuePolls } from './polls.js?v=20261101183038';
-import { replayRatings, ensureBase } from './ratings.js?v=20261101183038';
-import { progress, lockField, postWeeks, allEvents, regWeeksOf, DEFAULT_NCAA, OLD_DEFAULT_NCAA, pickConfHosts, postseasonFinish, citySiteNames, wsTeams } from './postseason.js?v=20261101183038';
-import { isFinal, records, INDEPENDENT } from './standings.js?v=20261101183038';
-import { rng, normal, clamp, hashStr } from './util.js?v=20261101183038';
+import { START_YEAR, CONFERENCES, COACHES, SIDES, sideOf, conferencesFor, seedTeams, makeTeam, fillSite } from './data.js?v=20261101190736';
+import { generateSchedule, blankGame, DAY_ORDER, DEFAULT_REG_WEEKS, DEFAULT_TOURNEY_WEEKS, DEFAULT_CONF_MATCHES, DEFAULT_MAX_MATCHES, PER_WEEK, confWeeksFor, confWeeksMax, confRounds, confSeriesCounts, confTarget } from './schedule.js?v=20261101190736';
+import { simulateGame, estimateHitsErrors } from './sim.js?v=20261101190736';
+import { generatePoll, releaseDuePolls } from './polls.js?v=20261101190736';
+import { replayRatings, ensureBase } from './ratings.js?v=20261101190736';
+import { progress, lockField, postWeeks, allEvents, regWeeksOf, DEFAULT_NCAA, OLD_DEFAULT_NCAA, pickConfHosts, postseasonFinish, citySiteNames, wsTeams } from './postseason.js?v=20261101190736';
+import { isFinal, records, INDEPENDENT } from './standings.js?v=20261101190736';
+import { rng, normal, clamp, hashStr } from './util.js?v=20261101190736';
 
 export const SCHEMA_VERSION = 4;
 
-export function defaultSettings() {
-  return {
+// Men's defaults: the whole 6-team field at one site (no regionals).
+const MEN_SETTINGS = { mcwsName: 'NCAA Championship', mcwsVenue: 'Pauley Pavilion', mcwsCity: 'Los Angeles, Calif.', ncaa: { regionals: 0, perRegional: 4, wsSize: 6 } };
+export function defaultSettings(side = 'women') {
+  const base = {
     volatility: 1, confTourney: {}, confFormat: {}, mcwsName: 'Final Four', mcwsVenue: 'T-Mobile Center', mcwsCity: 'Kansas City, Mo.', development: 'normal', form: 'normal',
     regWeeks: DEFAULT_REG_WEEKS, tourneyWeeks: DEFAULT_TOURNEY_WEEKS, confMatches: DEFAULT_CONF_MATCHES, maxMatches: DEFAULT_MAX_MATCHES, ncaa: { ...DEFAULT_NCAA },
   };
+  return side === 'men' ? { ...base, ...JSON.parse(JSON.stringify(MEN_SETTINGS)) } : base;
 }
 
 export function newSeason(year, teams, settings = defaultSettings(), prev = null) {
@@ -29,14 +32,15 @@ export function newSeason(year, teams, settings = defaultSettings(), prev = null
   return season;
 }
 
-export function newLeague({ name = 'AAU Volleyball', year = START_YEAR, teams = seedTeams(), conferences = CONFERENCES } = {}) {
-  const season = newSeason(year, teams);
+export function newLeague({ side = 'women', name = SIDES[side === 'men' ? 'men' : 'women'].name, year = START_YEAR, teams = seedTeams(side), conferences = conferencesFor(side) } = {}) {
+  side = side === 'men' ? 'men' : 'women';
+  const season = newSeason(year, teams, defaultSettings(side));
   season.polls[0] = generatePoll(season, 0);
   const league = {
     schema: SCHEMA_VERSION, name, currentYear: year,
     conferences: JSON.parse(JSON.stringify(conferences)),
     coaches: {}, nextCoachId: 1,
-    seasons: { [year]: season }, alignment: ALIGNMENT,
+    seasons: { [year]: season }, side, ...(side === 'women' ? { alignment: ALIGNMENT } : {}),
   };
   ensureIndependent(league);
   for (const t of Object.values(teams)) { t.coachId = t.coach ? newCoach(league, t.coach) : null; delete t.coach; }
@@ -253,6 +257,7 @@ export function deleteConference(league, season, name) {
 export const ALIGNMENT = 'aau-2030-3';
 const DROPPED = ['Boston University']; // no volleyball program
 export function canApplyAlignment(league) {
+  if (sideOf(league) !== 'women') return false;
   const s = league.seasons?.[league.currentYear];
   return !!s && !league.draft && !s.games.some(g => g.type === 'regular' && isFinal(g));
 }
@@ -566,6 +571,7 @@ export function ensureIndependent(league) {
 }
 
 export function migrateLeague(league) {
+  const women = sideOf(league) === 'women';
   ensureIndependent(league);
   sortConferences(league);
   // Home fields for teams saved before they existed.
@@ -576,7 +582,8 @@ export function migrateLeague(league) {
   // get their drawn logo and colors, unless they already have a logo.
   const alias = { 'Coastal Athletic Conference': 'Coastal Atlantic Conference', UAA: 'University Athletic Association', 'Pac-10': 'Pacific-10 Conference' };
   for (const c of Object.keys(league.conferences || {})) {
-    const info = CONFERENCES[c] || CONFERENCES[alias[c]];
+    const own = conferencesFor(sideOf(league));
+    const info = own[c] || own[alias[c]];
     if (!info) continue;
     const have = league.conferences[c];
     if (have && info.logo && !have.logo) Object.assign(have, { logo: info.logo, altColor: info.altColor, color: info.color, abbr: have.abbr || info.abbr });
@@ -584,7 +591,7 @@ export function migrateLeague(league) {
   // Seasons still on the old default NCAA format (8 sites of 4 and super
   // regionals) whose field isn't set yet move to the new default: 4
   // regionals of 8, seeded 1–8.
-  for (const se of Object.values(league.seasons || {})) {
+  for (const se of women ? Object.values(league.seasons || {}) : []) {
     const n = se.settings?.ncaa;
     if (n && !se.post?.regionals && Object.keys(OLD_DEFAULT_NCAA).every(k => n[k] === OLD_DEFAULT_NCAA[k])) se.settings.ncaa = { ...n, ...DEFAULT_NCAA };
   }
@@ -592,7 +599,7 @@ export function migrateLeague(league) {
   // Wednesday and Saturday choice becomes Friday and Saturday.
   for (const se of Object.values(league.seasons || {})) for (const [c, f] of Object.entries(se.settings?.confWeekend || {})) if (f === 'ws') se.settings.confWeekend[c] = 'fs';
   // A dynasty that hasn't played its first match takes the current alignment.
-  if (league.alignment !== ALIGNMENT && league.seasons && canApplyAlignment(league) && league.currentYear === START_YEAR) {
+  if (women && league.alignment !== ALIGNMENT && league.seasons && canApplyAlignment(league) && league.currentYear === START_YEAR) {
     try { applyAlignment(league); league.migrated = true; } catch (e) { console.warn(e); }
   }
   const v = league.schema || 1;

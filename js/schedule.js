@@ -26,9 +26,9 @@
 // When `prev` (last season) is given, conference opponents who met once last
 // year swap home and away.
 
-import { isIndependent } from './standings.js?v=20261101183038';
-import { cityPoint, miles } from './geo.js?v=20261101183038';
-import { rng, shuffle, hashStr } from './util.js?v=20261101183038';
+import { isIndependent } from './standings.js?v=20261101190736';
+import { cityPoint, miles } from './geo.js?v=20261101190736';
+import { rng, shuffle, hashStr } from './util.js?v=20261101190736';
 
 export const DEFAULT_REG_WEEKS = 13;
 export const DEFAULT_TOURNEY_WEEKS = 4;
@@ -305,6 +305,17 @@ export function generateSchedule(season, seed = hashStr(String(season.year)), pr
     const E = Math.max(1, Math.floor(free.length / 4), Math.ceil(free.length / 4), ...Object.values(confCount));
     const sizes = eventSizes(free.length, E);
     if (!sizes.length) return free;
+    // Too few teams outside the biggest conference for events of three (a
+    // small league, like the men's two conferences of seven): non-conference
+    // matches instead, one a day for three days against different teams.
+    if (Math.min(...sizes) < 3) {
+      const days = r() < 0.5 ? ['Thu', 'Fri', 'Sat'] : ['Fri', 'Sat', 'Sun'];
+      for (const day of days) {
+        const { pairs } = crossPairs(free, teams, met, r);
+        for (const [a, b] of pairs) { const [h, aw] = orient(a, b); add(week, h, aw, { day, order: DAY_ORDER[day] }); }
+      }
+      return;
+    }
     const events = sizes.map(() => []);
     // Place the biggest conferences first, each team in the open event that
     // suits it best: no rival there, nearby, not played yet, some randomness.

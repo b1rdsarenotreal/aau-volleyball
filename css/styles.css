@@ -23,6 +23,11 @@ a { color: var(--accent); }
   padding: 10px 24px 0; background: var(--board); color: var(--board-ink); box-shadow: inset 0 -1px 0 rgba(255,255,255,.06); }
 .brand { display: inline-flex; align-items: center; gap: 10px; font: 800 24px/1 var(--display); letter-spacing: .01em; padding-bottom: 10px; }
 .brand-mark { width: 26px; height: 26px; flex: none; }
+.side-switch { display: inline-flex; gap: 2px; padding: 3px; border-radius: 999px; background: rgba(255,255,255,.12); margin: 0 0 10px; }
+.side-switch button { border: 0; background: transparent; color: rgba(255,255,255,.75); font: 700 13px/1 var(--body); padding: 7px 12px; border-radius: 999px; cursor: pointer; }
+.side-switch button:hover { color: #fff; }
+.side-switch button.active { background: #f6f1e3; color: #0b3c5d; }
+.side-switch button:focus-visible { outline: 2px solid #f6f1e3; outline-offset: 2px; }
 .season-picker { padding-bottom: 10px; }
 .season-picker select { background: var(--board-2); border: 1px solid rgba(255,255,255,.12); color: #fff; border-radius: 8px; padding: 4px 10px; font: 700 18px var(--display); }
 .nav { display: flex; gap: 2px; flex-wrap: wrap; margin-left: auto; align-self: flex-end; }

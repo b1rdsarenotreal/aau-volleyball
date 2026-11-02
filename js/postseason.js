@@ -13,10 +13,10 @@
 // supers and mcws. The format is locked into the season when the field is
 // announced.
 
-import { blankGame, DAY_ORDER } from './schedule.js?v=20261101183038';
-import { records, rpi, confStandings, conferences, isFinal, winnerOf, loserOf, regularSeasonDone, regSeasonChamp, regSeasonChamps, quadrants } from './standings.js?v=20261101183038';
-import { generatePoll } from './polls.js?v=20261101183038';
-import { hashStr } from './util.js?v=20261101183038';
+import { blankGame, DAY_ORDER } from './schedule.js?v=20261101190736';
+import { records, rpi, confStandings, conferences, isFinal, winnerOf, loserOf, regularSeasonDone, regSeasonChamp, regSeasonChamps, quadrants } from './standings.js?v=20261101190736';
+import { generatePoll } from './polls.js?v=20261101190736';
+import { hashStr } from './util.js?v=20261101190736';
 
 // ---------- tournament format ----------
 
@@ -25,8 +25,13 @@ import { hashStr } from './util.js?v=20261101183038';
 // (1 v 4 and 2 v 3 by the hosts' national seeds).
 export const DEFAULT_NCAA = { regionals: 4, perRegional: 8, wsSize: 4 };
 export const OLD_DEFAULT_NCAA = { regionals: 8, perRegional: 4, wsSize: 4 };
-export const fieldSize = cfg => cfg.regionals * cfg.perRegional;
-export const hasSupers = cfg => cfg.regionals === cfg.wsSize * 2;
+// `regionals: 0` means no regionals: the whole field (wsSize teams, 2 to 8)
+// plays single elimination at the finals site, the top seeds getting byes
+// when the field isn't a power of two (6 teams: 1 and 2 wait for 4 v 5 and
+// 3 v 6). The men's default.
+export const noRegionals = cfg => !cfg.regionals;
+export const fieldSize = cfg => (noRegionals(cfg) ? cfg.wsSize : cfg.regionals * cfg.perRegional);
+export const hasSupers = cfg => !noRegionals(cfg) && cfg.regionals === cfg.wsSize * 2;
 
 export function ncaaConfig(season) {
   return { ...DEFAULT_NCAA, ...(season.post?.cfg || season.settings?.ncaa || {}) };
@@ -41,13 +46,18 @@ export function regionalSeed(season, team) {
 }
 export function shownSeed(season, team) {
   const p = season.post;
-  const f = p?.field?.find(x => x.team === team);
-  return f && f.seed <= ncaaConfig(season).regionals ? f.seed : null;
+  const f = p?.field?.find(x => x.team === team), cfg = ncaaConfig(season);
+  return f && f.seed <= (noRegionals(cfg) ? cfg.wsSize : cfg.regionals) ? f.seed : null;
 }
 
 // Problems with a format, in plain words (empty when it works).
 export function ncaaProblems(cfg, teamCount) {
   const out = [];
+  if (noRegionals(cfg)) {
+    if (!(cfg.wsSize >= 2 && cfg.wsSize <= 8)) out.push('With no regionals the field must be 2 to 8 teams.');
+    if (fieldSize(cfg) > teamCount) out.push(`That's ${fieldSize(cfg)} teams, but there are only ${teamCount} teams.`);
+    return out;
+  }
   if (![4, 8].includes(cfg.wsSize)) out.push('The Final Four must have 4 or 8 teams.');
   if (cfg.regionals !== cfg.wsSize && cfg.regionals !== cfg.wsSize * 2) out.push(`With ${cfg.wsSize} teams at the finals there must be ${cfg.wsSize} regionals (winners go straight to the finals) or ${cfg.wsSize * 2} (winners meet in super regionals).`);
   if (!(cfg.perRegional >= 2 && cfg.perRegional <= 8)) out.push('Each regional needs 2 to 8 teams.');
@@ -60,6 +70,10 @@ export const stageRoundName = n => ({ 2: 'National final', 4: 'Final Four', 8: '
 
 // One-paragraph description of a tournament format.
 export function formatSummary(cfg) {
+  if (noRegionals(cfg)) {
+    const n = cfg.wsSize, p = 2 ** Math.ceil(Math.log2(n)), byes = p - n;
+    return `<b>Format:</b> ${n} teams, single elimination at the finals site, seeded 1–${n}${byes ? `; the top ${byes === 1 ? 'seed waits' : `${byes} seeds wait`} a round` : ''}. Every round is one best-of-five match.`;
+  }
   const site = cfg.perRegional === 2 ? 'one match' : `${cfg.perRegional}-team single elimination`;
   const sup = hasSupers(cfg) ? ` Regional winners pair off in ${cfg.regionals / 2} super regionals (the ${stageRoundName(cfg.regionals)}), one match hosted by the higher national seed.` : '';
   const ws = cfg.wsSize === 8 ? '8 teams at the finals site: quarterfinals, semifinals and the final' : 'the Final Four: semifinals and the national final';
@@ -70,6 +84,7 @@ export function formatSummary(cfg) {
 export function regWeeksOf(season) { return season.regWeeks ?? 14; }
 export function postWeeks(season) {
   const R = regWeeksOf(season), cfg = ncaaConfig(season);
+  if (noRegionals(cfg)) return { conf: R + 1, mcws: R + 2 };
   const w = { conf: R + 1, regional: R + 2 };
   let n = R + 3;
   if (hasSupers(cfg)) w.super = n++;
@@ -211,6 +226,8 @@ function oneMatchNodes(label) {
 function finalsNodes(size) {
   const nodes = singleElim(size);
   if (size === 4) for (const n of nodes) n.day = n.label === 'Final' ? 'Sun' : 'Thu';
+  else if (size > 4) for (const n of nodes) n.day = { Final: 'Sun', Semifinal: 'Fri' }[n.label] || 'Wed';
+  else for (const n of nodes) n.day = 'Sun';
   for (const n of nodes) { n.label = n.label === 'Final' ? 'National final' : n.label === 'Semifinal' ? 'National semifinal' : n.label; n.code = n.code.replace(/^Final$/, 'National final').replace(/^SF-/, 'Semifinal ').replace(/^QF-/, 'Quarterfinal '); }
   return nodes;
 }
@@ -845,6 +862,7 @@ export function citySiteNames(season) {
 // Serpentine pods: with 4 regionals, regional 1 gets seeds 1, 8, 9, 16,
 // regional 2 gets 2, 7, 10, 15, and so on. Regional k is hosted by seed k+1.
 export function pods(field, regionals = 4) {
+  if (!regionals) return [];
   const n = regionals, out = Array.from({ length: n }, () => []);
   field.forEach((f, i) => { const rnd = Math.floor(i / n); const k = rnd % 2 === 0 ? i % n : n - 1 - (i % n); out[k].push(f.team); });
   return out;
@@ -887,6 +905,7 @@ function uniqueSiteNames(events, kind) {
 // Teams reaching the Final Four, in bracket-path order (path k = national seed k+1's side).
 function wsQualifiers(season) {
   const p = season.post, cfg = ncaaConfig(season);
+  if (noRegionals(cfg)) return p.field ? [...p.field].sort((a, b) => a.seed - b.seed).map(f => f.team) : null;
   const stage = hasSupers(cfg) ? p.supers : p.regionals;
   if (!stage?.length || !stage.every(ev => ev.champion)) return null;
   return stage.map((ev, i) => [ev.path ?? i, ev.champion]).sort((a, b) => a[0] - b[0]).map(x => x[1]);
@@ -1027,7 +1046,14 @@ export function postseasonFinish(season, team) {
   if (p.champion === team) return 'National champion';
   if (p.runnerUp === team) return 'National runner-up';
   const cfg = ncaaConfig(season);
-  if (wsTeams(season).includes(team)) return stageRoundName(cfg.wsSize);
+  if (wsTeams(season).includes(team)) {
+    // Name the round a team went out in by the teams left then.
+    const lost = season.games.find(g => g.type === 'mcws' && isFinal(g) && loserOf(g) === team);
+    if (!lost) return stageRoundName(Math.min(cfg.wsSize, 4));
+    const r = ELIM_ROUND(lost.node), rounds = Math.ceil(Math.log2(cfg.wsSize));
+    const left = Math.min(cfg.wsSize, 2 ** (rounds - r + 1));
+    return left === 4 || left === 8 ? stageRoundName(left) : 'NCAA tournament';
+  }
   if (p.supers?.some(ev => ev.seeds.includes(team))) return stageRoundName(cfg.regionals);
   const reg = p.regionals?.find(ev => ev.seeds.includes(team));
   if (!reg) return null;

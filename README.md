@@ -16,6 +16,33 @@ Open `index.html` through any static web server (GitHub Pages works: Settings
 browser; **Settings → Download backup** keeps a copy or moves it to another
 device.
 
+## Women's and men's
+
+The switch at the top of every page flips between two **completely separate
+dynasties**, women's and men's. Each has its own teams, conferences,
+schedule, ratings, coaches, polls, postseason, history, records, settings
+and backups; switching saves the one you're on and opens the other right
+where you left it. Everything below works the same way in both.
+
+**Men's** starts with the 14 AAU schools that play men's volleyball, in two
+men's-only conferences of seven (each with its own logo):
+
+| Conference | Teams |
+|---|---|
+| Pacific Volleyball Federation (PVF) | UCLA, UC Irvine, USC, UC Santa Barbara, UC San Diego, Stanford, UC Santa Cruz |
+| Eastern Volleyball Association (EVA) | Penn State, Ohio State, Princeton, Harvard, MIT, NYU, Toronto |
+
+Ratings come from the 2026 season (UCLA 29-2 and the No. 1 seed, UC Irvine
+the national runner-up, USC and Penn State in the NCAA field, and so on);
+coaches are the real 2026-27 head coaches (UC Santa Cruz's couldn't be
+confirmed, so that job starts open). More schools can start men's programs:
+add them as teams in the offseason. With only two conferences, the
+non-conference weeks are three matches against the other conference instead
+of invitationals. The NCAA tournament is **6 teams, single elimination at
+one site** (the NCAA Championship at Pauley Pavilion; change it in
+Settings): 3 v 6 and 4 v 5 on Wednesday, the 1 and 2 seeds waiting for them
+in Friday's semifinals, the final Sunday.
+
 ## The league
 
 72 schools in the commissioner's eight conferences (the alignment from the
@@ -151,7 +178,8 @@ all work as in MCS Dynasty, with sets in place of runs.
      semifinals keep the bracket by the hosts' national seeds: the 1 seed's
      regional meets the 4 seed's, and 2 meets 3.
 
-   Other shapes: 2–8 teams per regional, 8 regionals whose winners meet in
+   Other shapes: no regionals at all (2 to 8 teams single elimination at the
+   finals site, the men's default), 2–8 teams per regional, 8 regionals whose winners meet in
    super regionals (one match at the higher national seed), or 8 teams at
    the finals. A dynasty saved on the old default (8 regionals of 4) moves
    to 4 of 8 for any season whose field hasn't been announced.

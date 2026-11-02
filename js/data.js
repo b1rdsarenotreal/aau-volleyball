@@ -20,6 +20,8 @@
 // The rest (NYU, Brandeis, Johns Hopkins, MIT, Caltech, UC Santa Cruz, McGill,
 // Toronto) are estimates from each program's usual level.
 
+import { MEN_CONFERENCES, MEN_TEAMS, MEN_COACHES } from './data-men.js?v=20261101190736';
+
 export const START_YEAR = 2030;
 
 // The commissioner's conference alignment (from the AAU Dynasty), each with a
@@ -306,10 +308,25 @@ export function splitOvr(school, ovr) {
   return { off: c(off), pit: c(pit), def: c(def) };
 }
 
-export function seedTeams() {
+// Women's and men's are separate leagues (the switch at the top of the
+// page). `side` is 'women' (the default) or 'men'.
+export const SIDES = {
+  women: { label: "Women's", name: 'AAU Volleyball' },
+  men: { label: "Men's", name: "AAU Men's Volleyball" },
+};
+export const sideOf = league => (league?.side === 'men' ? 'men' : 'women');
+
+export function seedTeams(side = 'women') {
   const teams = {};
+  if (side === 'men') {
+    for (const [school, conference, abbr, mascot, color, altColor, ovr, stadium, city] of MEN_TEAMS) {
+      teams[school] = makeTeam({ school, conference, abbr, mascot, coach: MEN_COACHES[school] || '', color, altColor, stadium, city, ...splitOvr(school, ovr) });
+    }
+    return teams;
+  }
   for (const [school, conference, abbr, mascot, color, altColor, ovr] of T) {
     teams[school] = makeTeam({ school, conference, abbr, mascot, coach: COACHES[school] || '', color, altColor, ...splitOvr(school, ovr) });
   }
   return teams;
 }
+export const conferencesFor = side => (side === 'men' ? MEN_CONFERENCES : CONFERENCES);

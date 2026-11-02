@@ -134,4 +134,25 @@ svg('uaa.svg', 'University Athletic Association', f"""
 <polygon fill="#FFFFFF" points="46,52 74,52 67,60 53,60"/><polygon fill="#FFFFFF" points="55,62 65,62 62,78 58,78"/>
 {text('UAA', 60, 103, 26, '#FFFFFF', 1)}
 <rect x="6" y="6" width="108" height="108" rx="24" fill="none" stroke="{UGOLD}" stroke-width="3"/>""")
+# Pacific Volleyball Federation (men's): ocean blue and gold, a volleyball over a wave.
+OCEAN, PVGOLD = '#1B4F8A', '#F2B33D'
+ball = ('<circle cx="60" cy="42" r="21" fill="#FFFFFF"/>'
+        f'<path fill="none" stroke="{OCEAN}" stroke-width="2.6" stroke-linecap="round" d="M42 31 C53 37 58 47 57 62 M78 32 C66 33 58 38 51 46 M50 61 C58 54 69 52 80 55 M44 52 C52 45 55 35 53 22"/>')
+svg('pvf.svg', 'Pacific Volleyball Federation', f"""
+<defs><clipPath id="v"><circle cx="60" cy="60" r="52"/></clipPath></defs>
+<circle cx="60" cy="60" r="57" fill="{OCEAN}" stroke="{PVGOLD}" stroke-width="3"/>
+{ball}
+<g clip-path="url(#v)"><path fill="{PVGOLD}" d="{wave(70, 5, 26)}"/><path fill="{OCEAN}" d="{wave(76, 5, 26, -8)}"/></g>
+{text('PVF', 60, 101, 24, '#FFFFFF', 1)}""")
+
+# Eastern Volleyball Association (men's): maroon and silver, a shield with a volleyball.
+MAROON, SILVER = '#7A1F2B', '#B9C2CC'
+eshield = 'M60 6 L106 18 V60 C106 88 86 104 60 114 C34 104 14 88 14 60 V18 Z'
+svg('eva.svg', 'Eastern Volleyball Association', f"""
+<path d="{eshield}" fill="{MAROON}"/>
+<circle cx="60" cy="44" r="19" fill="#FFFFFF"/>
+<path fill="none" stroke="{MAROON}" stroke-width="2.4" stroke-linecap="round" d="M44 34 C54 39 58 48 57 62 M75 35 C64 35 57 40 50 47 M50 60 C57 54 66 52 77 55 M45 52 C52 46 54 36 53 26"/>
+<rect x="24" y="68" width="72" height="2.5" fill="{SILVER}"/>
+{text('EVA', 60, 96, 25, '#FFFFFF', 1.5)}
+<path d="{eshield}" fill="none" stroke="{SILVER}" stroke-width="3.5" stroke-linejoin="round"/>""")
 print('wrote', sorted(os.listdir(OUT)))
