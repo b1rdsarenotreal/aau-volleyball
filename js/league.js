@@ -1,15 +1,15 @@
 // League (dynasty) lifecycle: creating the league, saving results,
 // simulating, adding teams and conferences, and rolling into new seasons.
 
-import { DEFAULT_LOGOS, AAU_LOGO_SET } from './logo-import.js?v=20261101192332';
-import { START_YEAR, CONFERENCES, COACHES, SIDES, sideOf, conferencesFor, seedTeams, makeTeam, fillSite } from './data.js?v=20261101192332';
-import { generateSchedule, blankGame, DAY_ORDER, DEFAULT_REG_WEEKS, DEFAULT_TOURNEY_WEEKS, DEFAULT_CONF_MATCHES, DEFAULT_MAX_MATCHES, PER_WEEK, confWeeksFor, confWeeksMax, confRounds, confSeriesCounts, confTarget } from './schedule.js?v=20261101192332';
-import { simulateGame, estimateHitsErrors } from './sim.js?v=20261101192332';
-import { generatePoll, releaseDuePolls } from './polls.js?v=20261101192332';
-import { replayRatings, ensureBase } from './ratings.js?v=20261101192332';
-import { progress, lockField, postWeeks, allEvents, regWeeksOf, DEFAULT_NCAA, OLD_DEFAULT_NCAA, pickConfHosts, postseasonFinish, citySiteNames, wsTeams } from './postseason.js?v=20261101192332';
-import { isFinal, records, INDEPENDENT } from './standings.js?v=20261101192332';
-import { rng, normal, clamp, hashStr } from './util.js?v=20261101192332';
+import { DEFAULT_LOGOS, AAU_LOGO_SET } from './logo-import.js?v=20261101194558';
+import { START_YEAR, CONFERENCES, COACHES, SIDES, sideOf, conferencesFor, seedTeams, makeTeam, fillSite } from './data.js?v=20261101194558';
+import { generateSchedule, blankGame, DAY_ORDER, DEFAULT_REG_WEEKS, DEFAULT_TOURNEY_WEEKS, DEFAULT_CONF_MATCHES, DEFAULT_MAX_MATCHES, PER_WEEK, confWeeksFor, confWeeksMax, confRounds, confSeriesCounts, confTarget } from './schedule.js?v=20261101194558';
+import { simulateGame, estimateHitsErrors } from './sim.js?v=20261101194558';
+import { generatePoll, releaseDuePolls } from './polls.js?v=20261101194558';
+import { replayRatings, ensureBase } from './ratings.js?v=20261101194558';
+import { progress, lockField, postWeeks, allEvents, regWeeksOf, fieldSize, DEFAULT_NCAA, OLD_DEFAULT_NCAA, pickConfHosts, postseasonFinish, citySiteNames, wsTeams } from './postseason.js?v=20261101194558';
+import { isFinal, records, INDEPENDENT } from './standings.js?v=20261101194558';
+import { rng, normal, clamp, hashStr } from './util.js?v=20261101194558';
 
 export const SCHEMA_VERSION = 4;
 
@@ -520,17 +520,23 @@ export function draftWarnings(league) {
       else if (T < 2 * (n - 1)) out.push(`${c} has ${n} teams, so each team plays ${T} conference matches: everyone once and some twice (which ones changes every season).`);
     }
   }
-  if (Object.keys(league.draft.teams).length < 16) out.push('The National Tournament field needs at least 16 teams.');
+  { const need = fieldNeed(currentSeason(league).settings), have = Object.keys(league.draft.teams).length;
+    if (have < need) out.push(`The ${need}-team National Tournament field needs at least ${need} teams (there are ${have}). Add teams or make the field smaller in Settings.`); }
   const open = Object.values(league.draft.teams).filter(t => !t.coachId).map(t => t.school).sort();
   if (open.length) out.push(`No head coach yet: ${open.join(', ')}.`);
   return out;
 }
 
+// Teams the National Tournament format needs (the field size from the
+// season's settings: 32 for the women's default, 6 for the men's).
+const fieldNeed = settings => fieldSize({ ...DEFAULT_NCAA, ...(settings?.ncaa || {}) });
+
 export function startNextSeason(league) {
   const prev = currentSeason(league);
   const year = prev.year + 1;
   const teams = league.draft?.year === year ? league.draft.teams : developTeams(prev.teams, year, prev.settings.development, prev, { spread: true, league });
-  if (Object.keys(teams).length < 16) throw new Error('The National Tournament field needs at least 16 teams.');
+  const need = fieldNeed(prev.settings), have = Object.keys(teams).length;
+  if (have < need) throw new Error(`The ${need}-team National Tournament field needs at least ${need} teams (there are ${have}). Add teams or make the field smaller in Settings.`);
   const moves = league.draft?.moves || [];
   delete league.draft;
   for (const t of Object.values(teams)) delete t.dev;

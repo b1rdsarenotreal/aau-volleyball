@@ -92,6 +92,12 @@ check('men\'s: a separate league of 14, two conferences of 7, a 6-team field', (
   assert.deepEqual(first.map(g => seed(g.home) + seed(g.away)).sort(), [9, 9]);
   assert.ok(first.every(g => ![1, 2].includes(seed(g.home)) && ![1, 2].includes(seed(g.away))));
   assert.equal(postseasonFinish(ms, ms.post.champion), 'National champion');
+  // On to the next season with 14 teams (a 6-team field needs only 6).
+  beginOffseason(M);
+  assert.ok(!draftWarnings(M).some(w => /needs at least/.test(w)));
+  startNextSeason(M);
+  assert.equal(M.currentYear, 2031);
+  assert.equal(Object.keys(currentSeason(M).teams).length, 14);
   // The women's league is untouched by the men's.
   assert.equal(Object.keys(currentSeason(newLeague()).teams).length, 72);
 });
