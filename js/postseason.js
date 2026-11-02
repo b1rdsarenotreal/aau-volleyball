@@ -13,10 +13,10 @@
 // supers and mcws. The format is locked into the season when the field is
 // announced.
 
-import { blankGame, DAY_ORDER } from './schedule.js?v=20261101190736';
-import { records, rpi, confStandings, conferences, isFinal, winnerOf, loserOf, regularSeasonDone, regSeasonChamp, regSeasonChamps, quadrants } from './standings.js?v=20261101190736';
-import { generatePoll } from './polls.js?v=20261101190736';
-import { hashStr } from './util.js?v=20261101190736';
+import { blankGame, DAY_ORDER } from './schedule.js?v=20261101191240';
+import { records, rpi, confStandings, conferences, isFinal, winnerOf, loserOf, regularSeasonDone, regSeasonChamp, regSeasonChamps, quadrants } from './standings.js?v=20261101191240';
+import { generatePoll } from './polls.js?v=20261101191240';
+import { hashStr } from './util.js?v=20261101191240';
 
 // ---------- tournament format ----------
 
@@ -1052,7 +1052,7 @@ export function postseasonFinish(season, team) {
     if (!lost) return stageRoundName(Math.min(cfg.wsSize, 4));
     const r = ELIM_ROUND(lost.node), rounds = Math.ceil(Math.log2(cfg.wsSize));
     const left = Math.min(cfg.wsSize, 2 ** (rounds - r + 1));
-    return left === 4 || left === 8 ? stageRoundName(left) : 'NCAA tournament';
+    return left === 4 || left === 8 ? stageRoundName(left) : 'National Tournament';
   }
   if (p.supers?.some(ev => ev.seeds.includes(team))) return stageRoundName(cfg.regionals);
   const reg = p.regionals?.find(ev => ev.seeds.includes(team));
@@ -1061,11 +1061,11 @@ export function postseasonFinish(season, team) {
   // Out inside the regional: name the round by how many teams were left
   // nationally (with 4 regionals of 8, a regional final is the Elite Eight).
   const lost = season.games.find(g => g.event === reg.id && isFinal(g) && (g.home === team || g.away === team) && winnerOf(g) !== team);
-  if (!lost) return 'NCAA tournament';
+  if (!lost) return 'National Tournament';
   const rounds = Math.max(...reg.nodes.map(n => +n.key.split('-')[0].slice(1)));
   const r = +String(lost.node || 'R1').split('-')[0].slice(1);
   const left = cfg.regionals * 2 ** (rounds - r + 1);
-  return left === 8 || left === 16 ? stageRoundName(left) : 'NCAA tournament';
+  return left === 8 || left === 16 ? stageRoundName(left) : 'National Tournament';
 }
 
 // Where a team's postseason ended, for team and coach histories:

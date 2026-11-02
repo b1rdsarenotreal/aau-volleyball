@@ -1,14 +1,14 @@
 // Season pages: home, schedule, standings, rankings and postseason.
 
-import { ctx, S, app, modal, $, $$, esc, toast, changed, persist, cache, team, teamOptions, teamNames, confLogo, confHref, confColor, confInfo, gameCard, compactCard, placeholderCard, bindGameCards, openGame, resultText, DAY_NAMES, readableOn, teamInfo, logoImg, teamHref } from './ui.js?v=20261101190736';
-import { isFinal, winnerOf, records, rpi, confStandings, conferences, regSeasonChamp, regSeasonChamps, TIEBREAKERS, quadrants, quadCuts, isIndependent, INDEPENDENT } from './standings.js?v=20261101190736';
-import { latestPoll, generatePoll, pollRankMap, pollSizeOf, VOTER_PANEL, voterStyle, votersOf, addRandomVoter, removeVoter } from './polls.js?v=20261101190736';
-import { ovr } from './sim.js?v=20261101190736';
-import { simGames, addGame, weekName } from './league.js?v=20261101190736';
-import { CONF_FORMATS, confFormatName, confKind } from './postseason.js?v=20261101190736';
-import { COMMITTEE_TIERS, COMMITTEE_SHORT, committeeSheet, compareTeams, mcwsVenue, postWeeks, regWeeksOf, ncaaConfig, hasSupers, noRegionals, fieldSize, wsTeams, formatSummary, shownSeed, postseasonBonus, defaultConfTourneySize, confTourneySeeds, reseedConfTourney, proposeField, lockField, pods, nodeTeams, nodeNeeded, runnerUp, committeeOrder, autoBids, refLabel, setConfFormat, ensureLayout, confHost, setConfHost, mcwsHistory, selectionBoard, setAtLarge, confirmField, unconfirmField, bracketology, BRACKETOLOGY_FROM_WEEK } from './postseason.js?v=20261101190736';
-import { fmtPct, hashStr } from './util.js?v=20261101190736';
-import { DAY_ORDER, CONF_WEEKENDS, applyConfWeekend } from './schedule.js?v=20261101190736';
+import { ctx, S, app, modal, $, $$, esc, toast, changed, persist, cache, team, teamOptions, teamNames, confLogo, confHref, confColor, confInfo, gameCard, compactCard, placeholderCard, bindGameCards, openGame, resultText, DAY_NAMES, readableOn, teamInfo, logoImg, teamHref } from './ui.js?v=20261101191240';
+import { isFinal, winnerOf, records, rpi, confStandings, conferences, regSeasonChamp, regSeasonChamps, TIEBREAKERS, quadrants, quadCuts, isIndependent, INDEPENDENT } from './standings.js?v=20261101191240';
+import { latestPoll, generatePoll, pollRankMap, pollSizeOf, VOTER_PANEL, voterStyle, votersOf, addRandomVoter, removeVoter } from './polls.js?v=20261101191240';
+import { ovr } from './sim.js?v=20261101191240';
+import { simGames, addGame, weekName } from './league.js?v=20261101191240';
+import { CONF_FORMATS, confFormatName, confKind } from './postseason.js?v=20261101191240';
+import { COMMITTEE_TIERS, COMMITTEE_SHORT, committeeSheet, compareTeams, mcwsVenue, postWeeks, regWeeksOf, ncaaConfig, hasSupers, noRegionals, fieldSize, wsTeams, formatSummary, shownSeed, postseasonBonus, defaultConfTourneySize, confTourneySeeds, reseedConfTourney, proposeField, lockField, pods, nodeTeams, nodeNeeded, runnerUp, committeeOrder, autoBids, refLabel, setConfFormat, ensureLayout, confHost, setConfHost, mcwsHistory, selectionBoard, setAtLarge, confirmField, unconfirmField, bracketology, BRACKETOLOGY_FROM_WEEK } from './postseason.js?v=20261101191240';
+import { fmtPct, hashStr } from './util.js?v=20261101191240';
+import { DAY_ORDER, CONF_WEEKENDS, applyConfWeekend } from './schedule.js?v=20261101191240';
 
 // " at Easton Stadium, Los Angeles, Calif." for a host school with a home field.
 const atField = (s, school) => { const t = s.teams[school]; const f = [t?.stadium, t?.city].filter(Boolean).join(', '); return f ? ` at ${esc(f)}` : ''; };
@@ -16,7 +16,7 @@ const atField = (s, school) => { const t = s.teams[school]; const f = [t?.stadiu
 const ui = { week: null, schedFilter: 'all', pollWeek: null, rankTab: 'poll', postTab: null, editPoll: null, voter: null };
 export function resetSeasonUi() { ui.week = null; ui.pollWeek = null; ui.postTab = null; ui.editPoll = null; }
 
-const PHASE_TEXT = { regular: 'Regular season', conf: 'Conference tournaments', selection: 'Selection', regionals: 'NCAA regionals', supers: 'NCAA super regionals', mcws: 'Final Four', complete: 'Season complete' };
+const PHASE_TEXT = { regular: 'Regular season', conf: 'Conference tournaments', selection: 'Selection', regionals: 'National Tournament: regionals', supers: 'National Tournament: super regionals', mcws: 'Final Four', complete: 'Season complete' };
 
 function nextGame(s) {
   return s.games.filter(g => !isFinal(g)).sort((a, b) => a.week - b.week || a.order - b.order || a.id - b.id)[0] || null;
@@ -58,7 +58,7 @@ export function renderHome() {
       <button class="btn" id="h-day">🎲 Sim next day</button>
       <button class="btn primary" id="h-week">🎲 Sim ${weekName(nx.week, s)}</button></div></div>`
       : s.phase === 'complete' && ctx.league.viewYear === ctx.league.currentYear ? `<div class="card"><div class="row"><div><h2 style="margin:0">On to the ${s.year + 1} offseason</h2><div class="muted small">Add teams and conferences, realign, and update coaches before the new schedule is built.</div></div><span class="spacer"></span><a class="btn primary" href="#/offseason">Open the offseason</a></div></div>`
-      : s.phase === 'selection' ? `<div class="card"><div class="row"><h2 style="margin:0">The NCAA field is ready to announce</h2><span class="spacer"></span><a class="btn primary" href="#/postseason">Review the field</a></div></div>` : ''}
+      : s.phase === 'selection' ? `<div class="card"><div class="row"><h2 style="margin:0">The National Tournament field is ready to announce</h2><span class="spacer"></span><a class="btn primary" href="#/postseason">Review the field</a></div></div>` : ''}
     <div class="grid" style="margin-top:16px">
       <div class="card"><h2>${poll ? (poll.week === 'final' ? 'Final poll' : poll.week === 0 ? 'Preseason poll' : `Week ${poll.week} poll`) : 'Poll'}</h2>
         <table><tbody>${(poll?.ranks || []).slice(0, 10).map((x, i) => `<tr><td class="num" style="width:28px">${i + 1}</td><td>${team(x.team, { rank: false })}</td><td class="num muted">${esc(x.record)}</td></tr>`).join('')}</tbody></table>
@@ -289,7 +289,7 @@ export function renderRankings() {
 // Hover (or focus, or tap) a team's record for the week to see the games:
 // a small card with each opponent, its rank at the time, and the score.
 function weekPopupHtml(s, t, games, key) {
-  const title = key === 'final' ? 'NCAA tournament' : key === postWeeks(s).conf ? 'Conference tournament' : `Week ${key}`;
+  const title = key === 'final' ? 'National Tournament' : key === postWeeks(s).conf ? 'Conference tournament' : `Week ${key}`;
   return `<div class="wkp-head">${logoImg(teamInfo(t), 18)}<b>${esc(t)}</b><span class="muted">${title}</span></div>
     ${games.map(g => {
       const home = g.home === t, opp = home ? g.away : g.home, won = winnerOf(g) === t;
@@ -381,12 +381,12 @@ function renderPollTab(root) {
         ${poll.edited ? '<span class="badge manual">Commissioner edited</span>' : ''}<span class="spacer"></span>
         ${editing ? '<button class="btn" id="p-cancel">Cancel</button><button class="btn primary" id="p-save">Save poll</button>' : '<button class="btn" id="p-edit">Edit poll</button><button class="btn" id="p-regen">Regenerate</button>'}</div>
       <div class="table-wrap"><table class="poll-table">
-        <thead><tr><th class="num">#</th><th>Team</th><th class="num">Record</th>${key === 0 ? '' : `<th class="num" title="${key === 'final' ? 'NCAA tournament record' : "Record in this poll's week"}">${key === 'final' ? 'NCAA' : 'This week'}</th>`}${editing ? '<th></th>' : '<th class="num">Points</th><th class="num">Prev</th><th></th>'}</tr></thead>
+        <thead><tr><th class="num">#</th><th>Team</th><th class="num">Record</th>${key === 0 ? '' : `<th class="num" title="${key === 'final' ? 'National Tournament record' : "Record in this poll's week"}">${key === 'final' ? 'Nat. Tourn.' : 'This week'}</th>`}${editing ? '<th></th>' : '<th class="num">Points</th><th class="num">Prev</th><th></th>'}</tr></thead>
         <tbody>${rows.map((x, i) => `<tr><td class="pt-rank" style="${rankBlock(x.team)}">${i + 1}</td><td><span class="pt-team"><span class="pt-logo">${logoImg(teamInfo(x.team), 24)}</span><a class="team-link" href="${teamHref(x.team)}">${esc(x.team)}</a>${!editing && x.fp ? ` <span class="muted small">(${x.fp})</span>` : ''}</span></td><td class="num muted">${esc(x.record || '')}</td>${key === 0 ? '' : (() => { const wr = weekRec(x.team); if (!wr) return '<td class="num muted">—</td>'; const [w, l] = wr.split('-').map(Number); return `<td class="num"><span class="wk-rec wk-hover ${w > l ? 'up' : w < l ? 'down' : ''}" data-wk="${esc(x.team)}" tabindex="0" aria-label="${esc(`${x.team} went ${wr}. Show the matches`)}">${wr}</span></td>`; })()}
           ${editing ? `<td class="num" style="white-space:nowrap"><button class="btn sm" data-up="${i}" ${i ? '' : 'disabled'}>▲</button> <button class="btn sm" data-down="${i}" ${i < rows.length - 1 ? '' : 'disabled'}>▼</button> <button class="btn sm danger" data-rm="${i}">✕</button></td>`
           : `<td class="num">${x.pts ?? ''}</td><td class="num muted">${prevKey !== undefined ? prev[x.team] ?? 'NR' : ''}</td><td class="num">${mv(x.team, i)}</td>`}</tr>`).join('')}</tbody></table></div>
       ${editing ? `<div class="row" style="margin-top:10px"><select id="p-add">${teamOptions('', { blankLabel: 'Add a team…', list: teamNames().filter(t => !rows.some(r => r.team === t)) })}</select><span class="muted small">Added teams go to the bottom; move them up with ▲. The poll keeps ${poll.size || poll.ranks.length} teams.</span></div>`
-      : `${dropped.length ? `<div class="dropped"><b>Dropped out:</b> ${dropped.map(d => `<span class="drop-item">${team(d.team, { rank: false, size: 16 })} <span class="muted small">was #${d.was}${d.week ? `, ${d.week} ${key === 'final' ? 'in the NCAA tournament' : 'this week'}` : ''}</span></span>`).join('')}</div>` : prevKey !== undefined ? '<p class="small muted" style="margin-top:10px">No teams dropped out this week.</p>' : ''}
+      : `${dropped.length ? `<div class="dropped"><b>Dropped out:</b> ${dropped.map(d => `<span class="drop-item">${team(d.team, { rank: false, size: 16 })} <span class="muted small">was #${d.was}${d.week ? `, ${d.week} ${key === 'final' ? 'in the National Tournament' : 'this week'}` : ''}</span></span>`).join('')}</div>` : prevKey !== undefined ? '<p class="small muted" style="margin-top:10px">No teams dropped out this week.</p>' : ''}
         ${poll.others?.length ? `<p class="small muted" style="margin-top:10px"><b>Others receiving votes:</b> ${poll.others.map(o => `${esc(o.team)} ${o.pts}`).join(', ')}</p>` : ''}`}
       <p class="small muted">${poll.ballots ? `${poll.voters} voters` : `${poll.voters || 40} simulated voters`}. First-place votes in parentheses. ${poll.ranks.length !== pollSizeOf(s) ? `This poll ranks ${poll.ranks.length} teams; polls released from now on rank ${pollSizeOf(s)}. ` : ''}Polls come out when a week's matches are all final.</p>
     </div>
@@ -467,9 +467,9 @@ function renderBracketology(root) {
   const W = BRACKETOLOGY_FROM_WEEK;
   const reg = s.games.filter(g => g.type === 'regular');
   const doneThrough = (() => { let w = 0; for (let k = 1; k <= regWeeksOf(s); k++) { const gs = reg.filter(g => g.week === k); if (gs.length && gs.every(isFinal)) w = k; else break; } return w; })();
-  if (p.field && s.phase !== 'selection') { root.innerHTML = `<div class="empty">The ${s.year} NCAA field has been announced. <a href="#/postseason">See the real bracket</a>.</div>`; return; }
+  if (p.field && s.phase !== 'selection') { root.innerHTML = `<div class="empty">The ${s.year} National Tournament field has been announced. <a href="#/postseason">See the real bracket</a>.</div>`; return; }
   if (doneThrough < W) {
-    root.innerHTML = `<div class="empty">Bracketology comes out once Week ${W} is finished${doneThrough ? ` (matches are final through Week ${doneThrough})` : ''}. It projects the NCAA field and the regionals as if the season ended that day, and updates as matches are played.</div>`;
+    root.innerHTML = `<div class="empty">Bracketology comes out once Week ${W} is finished${doneThrough ? ` (matches are final through Week ${doneThrough})` : ''}. It projects the National Tournament field and the regionals as if the season ended that day, and updates as matches are played.</div>`;
     return;
   }
   const B = bracketology(s), r = rpi(s), recs = cache.recs(), pr = cache.ranks();
@@ -673,7 +673,7 @@ function renderPostseasonPage() {
     <div id="ps"></div>`;
   $$('[data-pt]').forEach(a => (a.onclick = e => { e.preventDefault(); ui.postTab = a.dataset.pt; renderPostseasonPage(); }));
   if ($('#ps-all')) $('#ps-all').onclick = () => {
-    if (!confirm('Simulate the rest of the postseason? The NCAA field is announced as proposed if you haven\'t announced it yet.')) return;
+    if (!confirm('Simulate the rest of the postseason? The National Tournament field is announced as proposed if you haven\'t announced it yet.')) return;
     simAndReport(g => g.type !== 'regular', 'in the postseason', { autoLock: true });
   };
   const root = $('#ps');
@@ -763,7 +763,7 @@ const committeeBox = (open = false) => `<details class="card small committee-box
   <p class="muted" style="margin:6px 0 0">Ranking works one matchup at a time: teams start in RPI order, and each team moves up past every team it beats in a comparison until it meets one that beats it. If A beats B, then C is compared with B; if C wins, C is compared with A. The same comparisons pick the at-large teams (across the league) and set the seeds (within the field). Win percentages only count when both teams have matches in that quadrant; fewer losses is better.</p></details>`;
 const QHEAD = ['Q1', 'Q2', 'Q3', 'Q4'].map((q, i) => `<th class="num q${i + 1}" title="Record in ${q} matches (see the note below the table)">${q}</th>`).join('');
 const quadText = n => { const C = quadCuts(n), r = (loc, k) => `${k ? C[loc][k - 1] + 1 : 1}-${C[loc][k]}`;
-  return `Quadrants follow the NCAA team sheet: a match's quadrant depends on the opponent's RPI rank and where it was played. Q1 is home vs. RPI ${r('home', 0)}, neutral ${r('neutral', 0)}, away ${r('away', 0)}; Q2 home ${r('home', 1)}, neutral ${r('neutral', 1)}, away ${r('away', 1)}; Q3 home ${r('home', 2)}, neutral ${r('neutral', 2)}, away ${r('away', 2)}; Q4 is everything else. For the committee, Q1 and Q2 wins count most and Q3 and Q4 losses hurt most.`; };
+  return `Quadrants follow the selection committee's team sheet: a match's quadrant depends on the opponent's RPI rank and where it was played. Q1 is home vs. RPI ${r('home', 0)}, neutral ${r('neutral', 0)}, away ${r('away', 0)}; Q2 home ${r('home', 1)}, neutral ${r('neutral', 1)}, away ${r('away', 1)}; Q3 home ${r('home', 2)}, neutral ${r('neutral', 2)}, away ${r('away', 2)}; Q4 is everything else. For the committee, Q1 and Q2 wins count most and Q3 and Q4 losses hurt most.`; };
 
 // Drag-to-reorder for table rows. Works with a mouse, pen or finger: press
 // a row's handle (⠿), drag, and let go where the team should land. The page
@@ -816,7 +816,7 @@ function renderField(root) {
   const s = S(), p = s.post || {};
   if (!p.field) {
     const cfg = ncaaConfig(s);
-    root.innerHTML = `<div class="empty">The ${fieldSize(cfg)}-team NCAA field is chosen once every conference tournament is finished. It has ${Object.keys(ctx.league.conferences).length ? 'one automatic bid per conference (the tournament champion, or the regular-season champion where there is no tournament)' : 'automatic bids'}, and the rest are at-large picks. The committee compares teams two at a time (Tier 1: RPI, Q1 wins, Q4 losses; Tier 2: strength of schedule, head-to-head, Q2 wins, overall W-L; Tier 3: automatic bid, regular-season title, Q3 losses, Q1 and Q2 win percentages) as a starting point; you pick the at-large teams and set the seeds.<br><br>${formatSummary(cfg)} <a href="#/settings">Change the format in Settings.</a></div>`;
+    root.innerHTML = `<div class="empty">The ${fieldSize(cfg)}-team National Tournament field is chosen once every conference tournament is finished. It has ${Object.keys(ctx.league.conferences).length ? 'one automatic bid per conference (the tournament champion, or the regular-season champion where there is no tournament)' : 'automatic bids'}, and the rest are at-large picks. The committee compares teams two at a time (Tier 1: RPI, Q1 wins, Q4 losses; Tier 2: strength of schedule, head-to-head, Q2 wins, overall W-L; Tier 3: automatic bid, regular-season title, Q3 losses, Q1 and Q2 win percentages) as a starting point; you pick the at-large teams and set the seeds.<br><br>${formatSummary(cfg)} <a href="#/settings">Change the format in Settings.</a></div>`;
     return;
   }
   const r = rpi(s), pr = cache.ranks(), recs = cache.recs(), Q = quadrants(s, r), sheet = committeeSheet(s);
@@ -938,7 +938,7 @@ function regionalPreview(s, field, podList, r) {
 
 function renderRegionals(root) {
   const s = S(), p = s.post || {};
-  if (!p.regionals) { root.innerHTML = '<div class="empty">The regionals begin once the NCAA field is announced.</div>'; return; }
+  if (!p.regionals) { root.innerHTML = '<div class="empty">The regionals begin once the National Tournament field is announced.</div>'; return; }
   const open = s.games.some(g => g.type === 'regional' && !isFinal(g));
   root.innerHTML = `${open ? '<div class="row" style="margin-bottom:12px"><span class="spacer"></span><button class="btn primary" id="rg-sim">🎲 Sim regionals</button></div>' : ''}
     ${p.regionals.map(ev => {

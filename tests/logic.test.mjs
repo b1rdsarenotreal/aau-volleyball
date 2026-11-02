@@ -70,7 +70,13 @@ check('men\'s: a separate league of 14, two conferences of 7, a 6-team field', (
   const c = {}, h = {}, tot = {}, day = new Set();
   for (const g of mreg) for (const t of [g.home, g.away]) { tot[t] = (tot[t] || 0) + 1; const k = `${t}|${g.week}|${g.day}`; assert.ok(!day.has(k), k); day.add(k); }
   for (const g of mreg.filter(g => g.confGame)) { c[g.home] = (c[g.home] || 0) + 1; c[g.away] = (c[g.away] || 0) + 1; h[g.home] = (h[g.home] || 0) + 1; }
-  for (const t of Object.keys(ms.teams)) { assert.equal(c[t], 12); assert.equal(h[t], 6); assert.ok(tot[t] >= 24 && tot[t] <= 30, `${t} ${tot[t]}`); }
+  for (const t of Object.keys(ms.teams)) { assert.equal(c[t], 12); assert.equal(h[t], 6); assert.equal(tot[t], 19, `${t} ${tot[t]}`); }
+  // Everyone in the other conference exactly once, before conference play.
+  const nc = mreg.filter(g => !g.confGame), seen = new Set();
+  for (const g of nc) { assert.notEqual(ms.teams[g.home].conference, ms.teams[g.away].conference); const k = [g.home, g.away].sort().join(); assert.ok(!seen.has(k), k); seen.add(k); }
+  assert.equal(seen.size, 49);
+  assert.ok(Math.max(...nc.map(g => g.week)) < Math.min(...mreg.filter(g => g.confGame).map(g => g.week)));
+  assert.equal(ms.settings.mcwsName, 'AAU National Tournament');
   // Postseason: 6 teams at one site, seeds 1 and 2 wait; 3 v 6 and 4 v 5 first.
   simGames(ms, undefined, { autoLock: true });
   assert.equal(ms.phase, 'complete');
@@ -256,7 +262,7 @@ check('postseason: conference tournament, 4 regionals of 8, Final Four', () => {
   assert.equal(postseasonFinish(s, p.champion), 'National champion');
   assert.equal(postseasonFinish(s, p.runnerUp), 'National runner-up');
   const out1 = p.regionals[0].seeds.find(t => t !== p.regionals[0].champion);
-  assert.ok(['NCAA tournament', 'Sweet 16', 'Elite Eight'].includes(postseasonFinish(s, out1)));
+  assert.ok(['National Tournament', 'Sweet 16', 'Elite Eight'].includes(postseasonFinish(s, out1)));
   const finalist = s.games.find(g => g.event === p.regionals[1].id && g.node === 'R3-1');
   assert.equal(postseasonFinish(s, finalist.home === p.regionals[1].champion ? finalist.away : finalist.home), 'Elite Eight');
   assert.match(postseasonDetail(s, out1).text, /Regional · out in the (first|second|third) round/);

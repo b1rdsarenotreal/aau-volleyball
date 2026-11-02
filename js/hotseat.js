@@ -2,14 +2,14 @@
 // judged against what the roster should have done: a team's preseason
 // ratings set an expected winning percentage, and results above or below it,
 // this season and over the coach's recent seasons at the school, move the
-// coach up or down the list. Losing streaks, missed NCAA tournaments and
+// coach up or down the list. Losing streaks, missed National Tournament tournaments and
 // last-place finishes add heat; titles, deep runs and a new coach's first
 // season cool it. These are suggestions only: nothing changes until the
 // commissioner fires someone.
 
-import { records, rpi, confStandings, regSeasonChamps, isIndependent } from './standings.js?v=20261101190736';
-import { wsTeams } from './postseason.js?v=20261101190736';
-import { ovr } from './sim.js?v=20261101190736';
+import { records, rpi, confStandings, regSeasonChamps, isIndependent } from './standings.js?v=20261101191240';
+import { wsTeams } from './postseason.js?v=20261101191240';
+import { ovr } from './sim.js?v=20261101191240';
 
 export const HEAT = {
   fire: { label: 'Fire suggested', min: 2.6 },
@@ -92,10 +92,10 @@ export function hotSeat(league, year = league.currentYear) {
     score += ([0, 0.5, 1.3, 2.1][Math.min(losing, 3)] + Math.max(0, losing - 3) * 0.4) * lose;
     if (losing >= 2) reasons.push(`${losing} straight losing seasons`);
     else if (losing === 1) reasons.push('Losing season');
-    // Missed the NCAA tournament with a roster that should have made it.
+    // Missed the National Tournament with a roster that should have made it.
     let missed = 0;
     for (const s of run) { if (!s.f.field.has(t.school)) missed++; else break; }
-    if (missed && now.exp >= 0.6) { score += 0.8 + Math.min(missed - 1, 2) * 0.4; reasons.push(missed > 1 ? `Missed the NCAA tournament ${missed} years running` : 'Missed the NCAA tournament'); }
+    if (missed && now.exp >= 0.6) { score += 0.8 + Math.min(missed - 1, 2) * 0.4; reasons.push(missed > 1 ? `Missed the National Tournament ${missed} years running` : 'Missed the National Tournament'); }
     // Bottom of the conference.
     if (now.place && now.place.of >= 4) {
       if (now.place.pos === now.place.of) { score += 0.7 * lose; reasons.push(`Last in the ${t.conference}`); }
@@ -107,7 +107,7 @@ export function hotSeat(league, year = league.currentYear) {
     const titleYears = run.filter(s => s.f.champion === t.school).map(s => s.y);
     if (titleYears.length) { score -= 2.2 + (titleYears[0] >= year - 2 ? 1.5 : 0); cool.push(`National title${titleYears.length > 1 ? 's' : ''} (${titleYears.join(', ')})`); }
     if (now.f.ws.has(t.school) && now.f.champion !== t.school) { score -= 1.6; cool.push(`Reached the ${now.y && league.seasons[now.y].settings?.mcwsName || "Final Four"}`); }
-    else if (now.f.field.has(t.school)) { score -= 0.7; cool.push('Made the NCAA tournament'); }
+    else if (now.f.field.has(t.school)) { score -= 0.7; cool.push('Made the National Tournament'); }
     if (now.f.confT.has(t.school)) { score -= 0.8; cool.push('Won the conference tournament'); }
     if (now.f.regTitle.has(t.school)) { score -= 0.8; cool.push('Won the regular-season title'); }
     if (!reasons.length && !cool.length) reasons.push(gap > 0 ? `Went ${now.w}-${now.l}, a little under the roster's expected ${Math.round(now.exp * 100)}%` : `Went ${now.w}-${now.l}`);

@@ -1,11 +1,11 @@
 # AAU Volleyball
 
-A commissioner-style women's college volleyball dynasty. It's 2030: the NCAA
+A commissioner-style college volleyball dynasty, women's and men's. It's 2030: the NCAA
 has collapsed and the **Association of American Universities** runs college
 athletics. This dynasty covers **every AAU member with women's volleyball**,
 72 programs from every level (57 from NCAA Division I, 13 from Division III
 and the two Canadian members from U SPORTS): set-by-set scores, standings, the RPI, a voters' poll,
-conference play, the NCAA tournament through the Final Four, coaches, the
+conference play, the **AAU National Tournament** (what the NCAA tournament became) through the Final Four, coaches, the
 offseason and a record book.
 
 It's built on the MCS Dynasty engine (the softball dynasty) and works the same
@@ -33,13 +33,15 @@ men's-only conferences of seven (each with its own logo):
 | Eastern Volleyball Association (EVA) | Penn State, Ohio State, Princeton, Harvard, MIT, NYU, Toronto |
 
 Ratings come from the 2026 season (UCLA 29-2 and the No. 1 seed, UC Irvine
-the national runner-up, USC and Penn State in the NCAA field, and so on);
+the national runner-up, USC and Penn State in the 2026 NCAA field, and so on);
 coaches are the real 2026-27 head coaches (UC Santa Cruz's couldn't be
 confirmed, so that job starts open). More schools can start men's programs:
-add them as teams in the offseason. With only two conferences, the
-non-conference weeks are three matches against the other conference instead
-of invitationals. The NCAA tournament is **6 teams, single elimination at
-one site** (the NCAA Championship at Pauley Pavilion; change it in
+add them as teams in the offseason. Men's schedule (the default, changeable in **Settings → Schedule format →
+Non-conference schedule**): everyone in your conference twice, home and
+away, and everyone in the other conference once, 19 matches. The
+non-conference matches come first (Friday and Saturday, ending the week
+before conference play), then the conference. The AAU National Tournament is **6 teams, single elimination at
+one site** (at Pauley Pavilion; change it in
 Settings): 3 v 6 and 4 v 5 on Wednesday, the 1 and 2 seeds waiting for them
 in Friday's semifinals, the final Sunday.
 
@@ -123,6 +125,9 @@ match, a day, a week or the season.
 13 weeks by default, late August to late November (Settings → Schedule
 format):
 
+- **Non-conference**: invitationals (the women's default, below) or **play
+  every non-conference team once** (the men's default), set in Settings →
+  Schedule format.
 - **Invitationals** (weeks 1–4): every team plays a weekend round robin,
   usually four teams and three matches, **one a day with no doubleheaders**:
   some events run Thursday to Saturday, others Friday to Sunday. Each is
@@ -165,7 +170,7 @@ all work as in MCS Dynasty, with sets in place of runs.
    take an at-large spot, you check and uncheck teams, confirm them, drag
    seeds, watch the regional preview, and announce the field. **Bracketology**
    projects it from week 4.
-3. **NCAA tournament** (Settings → NCAA tournament), every round one match:
+3. **AAU National Tournament** (Settings → AAU National Tournament), every round one match:
    - **Regionals**: 32 teams in 4 regionals of 8, hosted by the top 4
      national seeds and built serpentine. Every team has a **regional seed**
      inside its regional (1–8), shown on the bracket, schedule and box
@@ -227,7 +232,7 @@ python3 tests/ui_test.py    # browser test (Playwright + Chromium)
 | `js/schedule.js` | Invitationals and conference schedules |
 | `js/standings.js` | Records, standings, tiebreakers, RPI, quadrants |
 | `js/polls.js` | Power ratings and the voters' poll |
-| `js/postseason.js` | Conference tournaments, selection, NCAA tournament |
+| `js/postseason.js` | Conference tournaments, selection, the AAU National Tournament |
 | `js/league.js` | Seasons, results, coaches, offseason |
 | `js/records.js`, `js/hotseat.js` | Record book, hot seat |
 | `js/views-*.js`, `js/ui.js` | Pages |

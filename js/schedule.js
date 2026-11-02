@@ -26,9 +26,9 @@
 // When `prev` (last season) is given, conference opponents who met once last
 // year swap home and away.
 
-import { isIndependent } from './standings.js?v=20261101190736';
-import { cityPoint, miles } from './geo.js?v=20261101190736';
-import { rng, shuffle, hashStr } from './util.js?v=20261101190736';
+import { isIndependent } from './standings.js?v=20261101191240';
+import { cityPoint, miles } from './geo.js?v=20261101191240';
+import { rng, shuffle, hashStr } from './util.js?v=20261101191240';
 
 export const DEFAULT_REG_WEEKS = 13;
 export const DEFAULT_TOURNEY_WEEKS = 4;
@@ -383,6 +383,43 @@ export function generateSchedule(season, seed = hashStr(String(season.year)), pr
   const confLeft = Object.fromEntries(names.map(n => [n, 0]));
   for (const pairs of Object.values(slotPairs)) for (const [a, b] of pairs) { confLeft[a]++; confLeft[b]++; }
   const room = n => cap - played[n] - confLeft[n];
+
+  // "Play everyone once" non-conference schedule (the men's default): every
+  // pair of teams from different conferences meets once, two rounds a week
+  // (Friday and Saturday) from week 1, before conference play starts. No
+  // invitationals and no extra matches on open dates.
+  if (season.settings?.nonConf === 'once') {
+    const confStart = Math.min(REG + 1, ...Object.keys(slotPairs).map(k => +k.split('|')[0]));
+    let left = shuffle(names.flatMap((a, i) => names.slice(i + 1).filter(b => !rival(teams, a, b)).map(b => [a, b])), r);
+    // One round: as many disjoint pairs as fit, teams with the most matches
+    // still to place first, skipping teams already busy in that slot.
+    const takeRound = busy => {
+      const need = {};
+      for (const [a, b] of left) { need[a] = (need[a] || 0) + 1; need[b] = (need[b] || 0) + 1; }
+      left.sort((x, y) => (need[y[0]] + need[y[1]]) - (need[x[0]] + need[x[1]]));
+      const used = new Set(busy), round = [];
+      for (const pr of left) if (!used.has(pr[0]) && !used.has(pr[1])) { round.push(pr); used.add(pr[0]); used.add(pr[1]); }
+      const gone = new Set(round);
+      left = left.filter(pr => !gone.has(pr));
+      return round;
+    };
+    const place = (w, k, round) => { const day = seriesDays('fs')[k]; for (const [a, b] of round) { const [h, aw] = orient(a, b); add(w, h, aw, { ...day, order: DAY_ORDER[day.day] + 0.5, slot: k }); } };
+    // Before conference play: the rounds end the week before it starts.
+    const preSlots = (confStart - 1) * PER_WEEK, rounds = [];
+    while (left.length && rounds.length < preSlots) rounds.push(takeRound([]));
+    const first = confStart - Math.ceil(rounds.length / PER_WEEK);
+    rounds.forEach((round, i) => place(first + Math.floor(i / PER_WEEK), i % PER_WEEK, round));
+    // Anything left goes in conference weeks, around the conference matches.
+    for (let w = confStart; w <= REG && left.length; w++) for (let k = 0; k < PER_WEEK && left.length; k++) {
+      place(w, k, takeRound((slotPairs[`${w}|${k}`] || []).flatMap(([a, b]) => [a, b])));
+    }
+    for (let week = 1; week <= REG; week++) for (let slot = 0; slot < PER_WEEK; slot++) for (const [a, b, conf] of slotPairs[`${week}|${slot}`] || []) {
+      const days = seriesDays(season.settings?.confWeekend?.[conf]);
+      add(week, a, b, { ...days[slot], confGame: true, slot });
+    }
+    return games;
+  }
+
   for (let week = 1; week <= REG; week++) {
     const busy = new Set();
     for (let slot = 0; slot < PER_WEEK; slot++) for (const [a, b] of slotPairs[`${week}|${slot}`] || []) { busy.add(a); busy.add(b); }
