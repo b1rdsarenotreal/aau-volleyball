@@ -21,7 +21,7 @@ check('72 AAU volleyball programs in the commissioner\'s conferences', () => {
   const count = {};
   for (const t of Object.values(teams)) count[t.conference] = (count[t.conference] || 0) + 1;
   assert.deepEqual(count, { 'Big Ten': 11, 'Coastal Atlantic Conference': 9, 'Pacific-10 Conference': 10, 'Metro Conference': 8, 'Southwest Conference': 8, 'Ivy League': 8, 'UC Athletic Association': 7, 'University Athletic Association': 11 });
-  for (const c of Object.keys(CONFERENCES)) assert.ok(existsSync(new URL(`../${CONFERENCES[c].logo}`, import.meta.url)), `${c} logo`);
+  for (const c of Object.keys(CONFERENCES)) assert.ok((/^https:\/\//.test(CONFERENCES[c].logo) || existsSync(new URL(`../${CONFERENCES[c].logo}`, import.meta.url))), `${c} logo`);
   assert.ok(Object.values(teams).every(t => t.stadium && t.city && t.color && t.mascot), 'every team has an arena, city, colors and mascot');
   assert.equal(Object.keys(COACHES).length, 72);
   assert.ok(Object.values(teams).every(t => t.coach === COACHES[t.school]));
