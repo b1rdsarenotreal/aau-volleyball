@@ -1,16 +1,22 @@
 // Shared UI state and pieces used by every page: the league, saving,
 // team labels and logos, game cards, and the game editor.
 
-import { saveLeague } from './store.js?v=20261103142828';
-import { logoFor } from './logos.js?v=20261103142828';
-import { LOGO_ALIASES } from './data.js?v=20261103142828';
-import { ovr, winProbability } from './sim.js?v=20261103142828';
-import { records, isFinal, winnerOf, sameConf } from './standings.js?v=20261103142828';
-import { latestPoll, pollRankMap } from './polls.js?v=20261103142828';
-import { afterChange, applyResult, clearResult, simResult, deleteGame, weekName, estimateHE } from './league.js?v=20261103142828';
-import { regWeeksOf, shownSeed, regionalSeed, mcwsVenue, gameVenue } from './postseason.js?v=20261103142828';
-import { DAY_ORDER } from './schedule.js?v=20261103142828';
-import { esc } from './util.js?v=20261103142828';
+import { saveLeague } from './store.js?v=20261103152609';
+import { logoFor } from './logos.js?v=20261103152609';
+import { LOGO_ALIASES } from './data.js?v=20261103152609';
+import { ovr, winProbability } from './sim.js?v=20261103152609';
+import { records, isFinal, winnerOf, sameConf } from './standings.js?v=20261103152609';
+import { latestPoll, pollRankMap } from './polls.js?v=20261103152609';
+import { afterChange, applyResult, clearResult, simResult, deleteGame, weekName, estimateHE } from './league.js?v=20261103152609';
+import { regWeeksOf, shownSeed, regionalSeed, mcwsVenue, gameVenue } from './postseason.js?v=20261103152609';
+import { DAY_ORDER } from './schedule.js?v=20261103152609';
+import { esc } from './util.js?v=20261103152609';
+
+// Seasons are academic years: the 2030 season is "2030–31". Years stay
+// numbers in the data; this is only how they read on screen.
+export const seasonLabel = y => (Number.isFinite(+y) && y !== '' && y != null ? `${y}–${String((+y + 1) % 100).padStart(2, '0')}` : String(y ?? ''));
+// A span of seasons: "2030–31" for one, "2030–35" for 2030–31 through 2034–35.
+export const seasonSpan = (a, b) => (a === b ? seasonLabel(a) : `${a}–${String((+b + 1) % 100).padStart(2, '0')}`);
 
 export { esc };
 export const ctx = { league: null, render: () => {} };
