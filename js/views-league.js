@@ -1,19 +1,19 @@
 // League pages: teams, team profiles, conferences, history, settings.
 
-import { readAauLogos, applyAauLogos, DEFAULT_LOGOS } from './logo-import.js?v=20261103134509';
-import { AAU_SCHOOLS, AAU_CONFERENCES } from './aau-schools.js?v=20261103134509';
-import { ctx, S, app, modal, $, $$, esc, toast, changed, persist, flushSave, cache, team, teamInfo, logoImg, teamOptions, teamHref, confLogo, confHref, confInfo, confColor, imageFileToDataUrl, readableOn, openGame, resultText } from './ui.js?v=20261103134509';
-import { isFinal, winnerOf, records, rpi, confStandings, regSeasonChamp, regSeasonChamps, isIndependent } from './standings.js?v=20261103134509';
-import { ovr } from './sim.js?v=20261103134509';
-import { latestPoll, pollRankMap, pollSizeOf, POLL_SIZES, DEFAULT_POLL_SIZE } from './polls.js?v=20261103134509';
-import { addTeam, removeTeam, renameTeam, addConference, renameConference, deleteConference, rebuildSchedule, startNextSeason, weekName, newLeague, beginOffseason, draftRemoveTeam, draftRestoreTeam, draftWarnings, coachName, coachSchool, hireCoach, newCoach, availableCoaches, backfillHitsErrors, placeRemaining, clearPoints, pointsLeft, migrateLeague, applyAlignment, canApplyAlignment, syncCoachBonus, devTotal, coachResumes, coachPrestige, prestigeLabel, coachBonus, programPrestiges, programLabel, fitLabel } from './league.js?v=20261103134509';
-import { hotSeat, HEAT } from './hotseat.js?v=20261103134509';
-import { setRating } from './ratings.js?v=20261103134509';
-import { confFormatName, postseasonFinish, postseasonDetail, postseasonRecord, wsTeams, postWeeks, regWeeksOf, ncaaConfig, ncaaProblems, fieldSize, hasSupers, formatSummary, proposeField, DEFAULT_NCAA, mcwsVenue, allEvents, gameVenue } from './postseason.js?v=20261103134509';
-import { DEFAULT_TOURNEY_WEEKS, DEFAULT_REG_WEEKS, DEFAULT_CONF_MATCHES, DEFAULT_MAX_MATCHES } from './schedule.js?v=20261103134509';
-import { exportLeague, clearLeague } from './store.js?v=20261103134509';
-import { clamp, fmtPct } from './util.js?v=20261103134509';
-import { recordBook, teamPollHistory, headToHead } from './records.js?v=20261103134509';
+import { readAauLogos, applyAauLogos, DEFAULT_LOGOS } from './logo-import.js?v=20261103142828';
+import { AAU_SCHOOLS, AAU_CONFERENCES } from './aau-schools.js?v=20261103142828';
+import { ctx, S, app, modal, $, $$, esc, toast, changed, persist, flushSave, cache, team, teamInfo, logoImg, teamOptions, teamHref, confLogo, confHref, confInfo, confColor, imageFileToDataUrl, readableOn, openGame, resultText } from './ui.js?v=20261103142828';
+import { isFinal, winnerOf, records, rpi, confStandings, regSeasonChamp, regSeasonChamps, isIndependent } from './standings.js?v=20261103142828';
+import { ovr } from './sim.js?v=20261103142828';
+import { latestPoll, pollRankMap, pollSizeOf, POLL_SIZES, DEFAULT_POLL_SIZE } from './polls.js?v=20261103142828';
+import { addTeam, removeTeam, renameTeam, addConference, renameConference, deleteConference, rebuildSchedule, startNextSeason, weekName, newLeague, beginOffseason, draftRemoveTeam, draftRestoreTeam, draftWarnings, coachName, coachSchool, hireCoach, newCoach, availableCoaches, backfillHitsErrors, placeRemaining, clearPoints, pointsLeft, migrateLeague, applyAlignment, canApplyAlignment, syncCoachBonus, devTotal, coachResumes, coachPrestige, prestigeLabel, coachBonus, programPrestiges, programLabel, fitLabel } from './league.js?v=20261103142828';
+import { hotSeat, HEAT } from './hotseat.js?v=20261103142828';
+import { setRating } from './ratings.js?v=20261103142828';
+import { confFormatName, postseasonFinish, postseasonDetail, postseasonRecord, wsTeams, postWeeks, regWeeksOf, ncaaConfig, ncaaProblems, fieldSize, hasSupers, formatSummary, proposeField, DEFAULT_NCAA, mcwsVenue, allEvents, gameVenue } from './postseason.js?v=20261103142828';
+import { DEFAULT_TOURNEY_WEEKS, DEFAULT_REG_WEEKS, DEFAULT_CONF_MATCHES, DEFAULT_MAX_MATCHES } from './schedule.js?v=20261103142828';
+import { exportLeague, clearLeague } from './store.js?v=20261103142828';
+import { clamp, fmtPct } from './util.js?v=20261103142828';
+import { recordBook, teamPollHistory, headToHead } from './records.js?v=20261103142828';
 
 const ui = { confFilter: '', ncaaDraft: null, teamSort: { k: 'ovr', dir: -1 }, coachSort: { k: 'now', dir: -1 }, teamTab: 'season', h2hSort: { k: 'g', dir: -1 }, h2hFilter: 'all', memberSort: { k: 'titles', dir: -1 } };
 
@@ -527,16 +527,17 @@ function teamH2HTab(name) {
 // ---------- team schedule (rows like a college athletics site) ----------
 const DOW = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-// A calendar date for a match: women's volleyball is a fall sport, so week 1
-// is the last week of August (the week of the last Friday in August, when
-// the season opens); men's is a spring sport, so week 1 is the week of the
-// second Friday in January. Each week after is seven days later.
+// A calendar date for a match. Seasons are academic years (the 2030 season
+// is 2030–31): women's volleyball is a fall sport, so week 1 is the last week
+// of August 2030 (the week of the last Friday in August, when the season
+// opens); men's is a spring sport, so week 1 is the week of the second Friday
+// in January 2031. Each week after is seven days later.
 export function gameDate(s, g) {
   let mon;
   if (ctx.league?.side === 'men') {
-    const jan1 = new Date(Date.UTC(s.year, 0, 1));
+    const jan1 = new Date(Date.UTC(s.year + 1, 0, 1));
     const fri = 1 + ((5 - jan1.getUTCDay() + 7) % 7) + 7; // second Friday of January
-    mon = new Date(Date.UTC(s.year, 0, fri - 4));
+    mon = new Date(Date.UTC(s.year + 1, 0, fri - 4));
   } else {
     const aug31 = new Date(Date.UTC(s.year, 7, 31));
     const fri = 31 - ((aug31.getUTCDay() - 5 + 7) % 7); // last Friday of August
