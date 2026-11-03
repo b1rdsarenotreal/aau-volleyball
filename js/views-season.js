@@ -1,14 +1,26 @@
 // Season pages: home, schedule, standings, rankings and postseason.
 
-import { ctx, S, app, modal, $, $$, esc, toast, changed, persist, cache, team, teamOptions, teamNames, confLogo, confHref, confColor, confInfo, gameCard, compactCard, placeholderCard, bindGameCards, openGame, resultText, DAY_NAMES, readableOn, teamInfo, logoImg, teamHref } from './ui.js?v=20261103125756';
-import { isFinal, winnerOf, records, rpi, confStandings, conferences, regSeasonChamp, regSeasonChamps, TIEBREAKERS, quadrants, quadCuts, isIndependent, INDEPENDENT } from './standings.js?v=20261103125756';
-import { latestPoll, generatePoll, pollRankMap, pollSizeOf, VOTER_PANEL, voterStyle, votersOf, addRandomVoter, removeVoter } from './polls.js?v=20261103125756';
-import { ovr } from './sim.js?v=20261103125756';
-import { simGames, addGame, weekName } from './league.js?v=20261103125756';
-import { CONF_FORMATS, confFormatName, confKind } from './postseason.js?v=20261103125756';
-import { COMMITTEE_TIERS, COMMITTEE_SHORT, committeeSheet, compareTeams, mcwsVenue, postWeeks, regWeeksOf, ncaaConfig, hasSupers, noRegionals, fieldSize, wsTeams, formatSummary, shownSeed, postseasonBonus, defaultConfTourneySize, confTourneySeeds, reseedConfTourney, proposeField, lockField, pods, nodeTeams, nodeNeeded, runnerUp, committeeOrder, autoBids, refLabel, setConfFormat, ensureLayout, confHost, setConfHost, mcwsHistory, selectionBoard, setAtLarge, confirmField, unconfirmField, bracketology, BRACKETOLOGY_FROM_WEEK } from './postseason.js?v=20261103125756';
-import { fmtPct, hashStr } from './util.js?v=20261103125756';
-import { DAY_ORDER, CONF_WEEKENDS, applyConfWeekend } from './schedule.js?v=20261103125756';
+import { ctx, S, app, modal, $, $$, esc, toast, changed, persist, cache, team, teamOptions, teamNames, confLogo, confHref, confColor, confInfo, gameCard, compactCard, placeholderCard, bindGameCards, openGame, resultText, DAY_NAMES, readableOn, teamInfo, logoImg, teamHref } from './ui.js?v=20261103134509';
+import { isFinal, winnerOf, records, rpi, confStandings, conferences, regSeasonChamp, regSeasonChamps, TIEBREAKERS, quadrants, quadCuts, isIndependent, INDEPENDENT } from './standings.js?v=20261103134509';
+import { latestPoll, generatePoll, pollRankMap, pollSizeOf, VOTER_PANEL, voterStyle, votersOf, addRandomVoter, removeVoter } from './polls.js?v=20261103134509';
+import { ovr } from './sim.js?v=20261103134509';
+import { simGames, addGame, weekName } from './league.js?v=20261103134509';
+import { CONF_FORMATS, confFormatName, confKind } from './postseason.js?v=20261103134509';
+import { COMMITTEE_TIERS, COMMITTEE_SHORT, committeeSheet, compareTeams, mcwsVenue, postWeeks, regWeeksOf, ncaaConfig, hasSupers, noRegionals, fieldSize, wsTeams, formatSummary, shownSeed, postseasonBonus, defaultConfTourneySize, confTourneySeeds, reseedConfTourney, proposeField, lockField, pods, nodeTeams, nodeNeeded, runnerUp, committeeOrder, autoBids, refLabel, setConfFormat, ensureLayout, confHost, setConfHost, mcwsHistory, selectionBoard, setAtLarge, confirmField, unconfirmField, bracketology, BRACKETOLOGY_FROM_WEEK } from './postseason.js?v=20261103134509';
+import { fmtPct, hashStr } from './util.js?v=20261103134509';
+import { DAY_ORDER, CONF_WEEKENDS, applyConfWeekend } from './schedule.js?v=20261103134509';
+
+// How an invitational is played, for its standings box: a round robin, or
+// (men's) each team playing the teams from the other conference; and its
+// days.
+const DAY_FULL = { Mon: 'Monday', Tue: 'Tuesday', Wed: 'Wednesday', Thu: 'Thursday', Fri: 'Friday', Sat: 'Saturday', Sun: 'Sunday' };
+const DAY_SEQ = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+function tourneyFormat(gs, rows) {
+  const n = Object.keys(rows).length;
+  const days = [...new Set(gs.map(g => g.day))].sort((a, b) => DAY_SEQ.indexOf(a) - DAY_SEQ.indexOf(b));
+  const when = days.length > 1 ? `${DAY_FULL[days[0]]}–${DAY_FULL[days[days.length - 1]]}` : DAY_FULL[days[0]] || '';
+  return `${gs.length >= n * (n - 1) / 2 ? 'round robin' : 'each team plays the teams from the other conference'}, ${when}`;
+}
 
 // " at Easton Stadium, Los Angeles, Calif." for a host school with a home field.
 const atField = (s, school) => { const t = s.teams[school]; const f = [t?.stadium, t?.city].filter(Boolean).join(', '); return f ? ` at ${esc(f)}` : ''; };
@@ -101,7 +113,7 @@ function tourneyStandings(s, weekGames) {
     });
     const done = gs.every(isFinal), played = gs.filter(isFinal).length;
     return `<div class="tst"><div class="row tst-head"><b>${esc(gs[0].label)}</b><span class="spacer"></span><span class="muted small">${done ? `Champion: ${esc(list[0].t)}` : `${played} of ${gs.length} matches played`}</span></div>
-      <div class="muted small" style="margin-bottom:4px">Hosted by ${esc(host)}${atField(S(), host)} · round robin, ${gs.length > 6 ? 'Thursday–Saturday' : 'Friday–Saturday'}</div>
+      <div class="muted small" style="margin-bottom:4px">Hosted by ${esc(host)}${atField(S(), host)} · ${tourneyFormat(gs, rows)}</div>
       <table class="tst-table"><thead><tr><th></th><th>Team</th><th class="num">W-L</th><th class="num" title="Sets won">SW</th><th class="num" title="Sets lost">SL</th><th class="num">Diff</th></tr></thead>
       <tbody>${list.map((x, i) => `<tr class="${done && i === 0 ? 'tst-champ' : ''}"><td class="num muted">${i + 1}</td><td>${team(x.t, { size: 16, ranks: weekRanks })}</td><td class="num"><b>${x.w}-${x.l}</b></td><td class="num">${x.rs}</td><td class="num">${x.ra}</td><td class="num ${x.rs - x.ra > 0 ? 'good' : x.rs - x.ra < 0 ? 'bad' : ''}">${x.rs - x.ra > 0 ? '+' : ''}${x.rs - x.ra}</td></tr>`).join('')}</tbody></table></div>`;
   });

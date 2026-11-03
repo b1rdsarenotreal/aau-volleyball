@@ -1,20 +1,20 @@
 // League (dynasty) lifecycle: creating the league, saving results,
 // simulating, adding teams and conferences, and rolling into new seasons.
 
-import { DEFAULT_LOGOS, AAU_LOGO_SET } from './logo-import.js?v=20261103125756';
-import { START_YEAR, CONFERENCES, CONF_LOGO_LINKS, COACHES, SIDES, sideOf, conferencesFor, seedTeams, makeTeam, fillSite } from './data.js?v=20261103125756';
-import { generateSchedule, blankGame, DAY_ORDER, DEFAULT_REG_WEEKS, DEFAULT_TOURNEY_WEEKS, DEFAULT_CONF_MATCHES, DEFAULT_MAX_MATCHES, PER_WEEK, confWeeksFor, confWeeksMax, confRounds, confSeriesCounts, confTarget } from './schedule.js?v=20261103125756';
-import { simulateGame, estimateHitsErrors } from './sim.js?v=20261103125756';
-import { generatePoll, releaseDuePolls } from './polls.js?v=20261103125756';
-import { replayRatings, ensureBase } from './ratings.js?v=20261103125756';
-import { progress, lockField, postWeeks, allEvents, regWeeksOf, fieldSize, DEFAULT_NCAA, OLD_DEFAULT_NCAA, pickConfHosts, postseasonFinish, citySiteNames, wsTeams } from './postseason.js?v=20261103125756';
-import { isFinal, records, INDEPENDENT } from './standings.js?v=20261103125756';
-import { rng, normal, clamp, hashStr } from './util.js?v=20261103125756';
+import { DEFAULT_LOGOS, AAU_LOGO_SET } from './logo-import.js?v=20261103134509';
+import { START_YEAR, CONFERENCES, CONF_LOGO_LINKS, COACHES, SIDES, sideOf, conferencesFor, seedTeams, makeTeam, fillSite } from './data.js?v=20261103134509';
+import { generateSchedule, blankGame, DAY_ORDER, DEFAULT_REG_WEEKS, DEFAULT_TOURNEY_WEEKS, DEFAULT_CONF_MATCHES, DEFAULT_MAX_MATCHES, PER_WEEK, confWeeksFor, confWeeksMax, confRounds, confSeriesCounts, confTarget } from './schedule.js?v=20261103134509';
+import { simulateGame, estimateHitsErrors } from './sim.js?v=20261103134509';
+import { generatePoll, releaseDuePolls } from './polls.js?v=20261103134509';
+import { replayRatings, ensureBase } from './ratings.js?v=20261103134509';
+import { progress, lockField, postWeeks, allEvents, regWeeksOf, fieldSize, DEFAULT_NCAA, OLD_DEFAULT_NCAA, pickConfHosts, postseasonFinish, citySiteNames, wsTeams } from './postseason.js?v=20261103134509';
+import { isFinal, records, INDEPENDENT } from './standings.js?v=20261103134509';
+import { rng, normal, clamp, hashStr } from './util.js?v=20261103134509';
 
 export const SCHEMA_VERSION = 4;
 
 // Men's defaults: the whole 6-team field at one site (no regionals).
-const MEN_SETTINGS = { nonConf: 'once', mcwsName: 'AAU National Tournament', mcwsVenue: 'Pauley Pavilion', mcwsCity: 'Los Angeles, Calif.', ncaa: { regionals: 0, perRegional: 4, wsSize: 6 } };
+const MEN_SETTINGS = { nonConf: 'mixed', mcwsName: 'AAU National Tournament', mcwsVenue: 'Pauley Pavilion', mcwsCity: 'Los Angeles, Calif.', ncaa: { regionals: 0, perRegional: 4, wsSize: 6 } };
 export function defaultSettings(side = 'women') {
   const base = {
     volatility: 1, confTourney: {}, confFormat: {}, mcwsName: 'Final Four', mcwsVenue: 'T-Mobile Center', mcwsCity: 'Kansas City, Mo.', development: 'normal', form: 'normal',
@@ -41,7 +41,7 @@ export function newLeague({ side = 'women', name = SIDES[side === 'men' ? 'men' 
     schema: SCHEMA_VERSION, name, currentYear: year,
     conferences: JSON.parse(JSON.stringify(conferences)),
     coaches: {}, nextCoachId: 1,
-    seasons: { [year]: season }, side, logoSet: AAU_LOGO_SET, ...(side === 'women' ? { alignment: ALIGNMENT } : {}),
+    seasons: { [year]: season }, side, nonConfVersion: 2, logoSet: AAU_LOGO_SET, ...(side === 'women' ? { alignment: ALIGNMENT } : {}),
   };
   ensureIndependent(league);
   for (const t of Object.values(teams)) { t.coachId = t.coach ? newCoach(league, t.coach) : null; delete t.coach; }
@@ -626,6 +626,18 @@ export function migrateLeague(league) {
     if (se.settings.nonConf) continue;
     se.settings.nonConf = 'once';
     if (se.year === league.currentYear && !se.games.some(g => g.type === 'regular' && isFinal(g)) && !league.draft) { rebuildSchedule(se, league.seasons[se.year - 1] || null); league.migrated = true; }
+  }
+  // Men's: invitationals or two-match series became the default (the owner
+  // asked, Nov. 2026). The current season switches (with a new schedule if
+  // no match has been played; otherwise from next season on); played
+  // seasons keep theirs.
+  if (!women && (league.nonConfVersion || 0) < 2) {
+    const se = league.seasons?.[league.currentYear];
+    if (se && se.settings.nonConf === 'once') {
+      se.settings.nonConf = 'mixed';
+      if (!se.games.some(g => g.type === 'regular' && isFinal(g)) && !league.draft) rebuildSchedule(se, league.seasons[se.year - 1] || null);
+    }
+    league.nonConfVersion = 2; league.migrated = true;
   }
   // Men's seasons scheduled before they started in week 1 (empty opening
   // weeks stopped the polls): move every match and poll up so week 1 has

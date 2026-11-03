@@ -37,6 +37,12 @@ include this repo.)
   (Wikipedia, school sites), with D-III and Canadian programs at 42–50.
   Coaches are the real 2026 head coaches. Men's teams start in two men's-only
   conferences (PVF and EVA), rated from the 2026 season.
+- Men's non-conference play (`settings.nonConf`): 'mixed' by default, four
+  weekends before conference play where about half the teams play a hosted
+  invitational (2 + 2 teams from two conferences, each playing the other
+  conference's two, Friday and Saturday) and the rest a two-match series
+  against a team from another conference; 'once' (everyone in the other
+  conference once) is still a setting. Women's uses 'invitationals'.
 
 ## Before every commit
 

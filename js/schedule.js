@@ -24,12 +24,15 @@
 //   that one; no non-conference match is added. A team with no match at all
 //   that week (a bye in both slots, or an independent) is paired with
 //   another such team for one non-conference match when it can be.
+// Men's volleyball uses one of two non-conference styles before conference
+// play instead (`settings.nonConf`): 'mixed', invitationals or two-match
+// series (the default), or 'once', everyone in the other conferences once.
 // When `prev` (last season) is given, conference opponents who met once last
 // year swap home and away.
 
-import { isIndependent } from './standings.js?v=20261103125756';
-import { cityPoint, miles } from './geo.js?v=20261103125756';
-import { rng, shuffle, hashStr } from './util.js?v=20261103125756';
+import { isIndependent } from './standings.js?v=20261103134509';
+import { cityPoint, miles } from './geo.js?v=20261103134509';
+import { rng, shuffle, hashStr } from './util.js?v=20261103134509';
 
 export const DEFAULT_REG_WEEKS = 13;
 export const DEFAULT_TOURNEY_WEEKS = 4;
@@ -385,6 +388,77 @@ export function generateSchedule(season, seed = hashStr(String(season.year)), pr
   for (const pairs of Object.values(slotPairs)) for (const [a, b] of pairs) { confLeft[a]++; confLeft[b]++; }
   const room = n => cap - played[n] - confLeft[n];
 
+  // Men's schedules (both non-conference styles below): conference play
+  // after the non-conference weeks, then the season moved up to start in
+  // week 1, as long as it needs to be (the weeks setting is the most it may
+  // use).
+  const confThenTrim = () => {
+    for (let week = 1; week <= REG; week++) for (let slot = 0; slot < PER_WEEK; slot++) for (const [a, b, conf] of slotPairs[`${week}|${slot}`] || []) {
+      const days = seriesDays(season.settings?.confWeekend?.[conf]);
+      add(week, a, b, { ...days[slot], confGame: true, slot });
+    }
+    const shift = Math.min(...games.map(g => g.week)) - 1;
+    if (shift > 0) for (const g of games) g.week -= shift;
+    season.regWeeks = Math.max(1, ...games.map(g => g.week));
+    return games;
+  };
+
+  // "Invitationals or series" (the men's default): the invitational weeks
+  // come right before conference play. Each of those weeks about half the
+  // teams play an invitational one of them hosts (the "Stanford Classic"):
+  // four teams from two conferences, two from each, each playing the two
+  // from the other conference, Friday and Saturday (with teams from three or
+  // four conferences, everyone not in its conference, Thursday to Saturday
+  // or Friday to Sunday). The rest play a two-match series against a team
+  // from another conference, Friday and Saturday at one team's home.
+  // Conference rivals never meet outside conference play.
+  if (season.settings?.nonConf === 'mixed') {
+    const confStart = Math.min(REG + 1, ...Object.keys(slotPairs).map(k => +k.split('|')[0]));
+    const firstNC = Math.max(1, confStart - Math.max(1, TW));
+    const share = season.settings?.invitationalShare ?? 0.5;
+    for (let week = firstNC; week < confStart; week++) {
+      const pool = shuffle(names, r);
+      const confOf = n => (isIndependent(teams[n].conference) ? `ind:${n}` : teams[n].conference);
+      const want = Math.round(names.length * share / 4);
+      const taken = new Set();
+      for (let e = 0; e < want; e++) {
+        // Two from each of the two conferences with the most teams left.
+        const left = {};
+        for (const n of pool) if (!taken.has(n)) (left[confOf(n)] ||= []).push(n);
+        const confs = Object.keys(left).sort((a, b) => left[b].length - left[a].length || (r() - 0.5));
+        let ev;
+        if (confs.length >= 2 && left[confs[1]].length >= 2) {
+          const [A, B] = [left[confs[0]], left[confs[1]]];
+          const a1 = A[0], a2 = [...A.slice(1)].sort((x, y) => dist(a1, x) - dist(a1, y))[0];
+          // The other pair: teams these two haven't met, nearby.
+          const sc = t => (met.has(key(a1, t)) ? 3000 : 0) + (met.has(key(a2, t)) ? 3000 : 0) + dist(a1, t) + r() * 400;
+          const [b1, b2] = [...B].sort((x, y) => sc(x) - sc(y));
+          ev = [a1, a2, b1, b2];
+        } else if (confs.length >= 4) ev = confs.slice(0, 4).map(c => left[c][0]);
+        else break;
+        for (const t of ev) taken.add(t);
+        const host = [...ev].sort((a, b) => homeCount[a] - homeCount[b] || (r() - 0.5))[0];
+        const id = `${season.year}-t${tNo++}`;
+        const name = `${host} ${TOURNEY_NAMES[hashStr(`${season.year}|${host}|${week}`) % TOURNEY_NAMES.length]}`;
+        const rounds = roundRobin(ev, r).map(pairs => pairs.filter(([a, b]) => a && b && !rival(teams, a, b))).filter(p => p.length);
+        const days = rounds.length <= 2 ? ['Fri', 'Sat'] : r() < 0.5 ? ['Thu', 'Fri', 'Sat'] : ['Fri', 'Sat', 'Sun'];
+        rounds.forEach((pairs, k) => pairs.forEach(([a, b], i) => {
+          const day = days[k];
+          let home, away;
+          if (a === host || b === host) { home = host; away = a === host ? b : a; } else [home, away] = orient(a, b);
+          add(week, home, away, { day, order: DAY_ORDER[day] + i * 0.01, tourney: id, label: name, ...(home === host ? {} : { neutral: true, site: host }) });
+        }));
+      }
+      // Everyone else: a two-match series, Friday and Saturday.
+      const { pairs } = crossPairs(pool.filter(n => !taken.has(n)), teams, met, r);
+      for (const [a, b] of pairs) {
+        const [h, aw] = orient(a, b);
+        for (const day of seriesDays('fs')) add(week, h, aw, { ...day, order: day.order + 0.5 });
+      }
+    }
+    return confThenTrim();
+  }
+
   // "Play everyone once" non-conference schedule (the men's default): every
   // pair of teams from different conferences meets once, two rounds a week
   // (Friday and Saturday) from week 1, before conference play starts. No
@@ -414,16 +488,7 @@ export function generateSchedule(season, seed = hashStr(String(season.year)), pr
     for (let w = confStart; w <= REG && left.length; w++) for (let k = 0; k < PER_WEEK && left.length; k++) {
       place(w, k, takeRound((slotPairs[`${w}|${k}`] || []).flatMap(([a, b]) => [a, b])));
     }
-    for (let week = 1; week <= REG; week++) for (let slot = 0; slot < PER_WEEK; slot++) for (const [a, b, conf] of slotPairs[`${week}|${slot}`] || []) {
-      const days = seriesDays(season.settings?.confWeekend?.[conf]);
-      add(week, a, b, { ...days[slot], confGame: true, slot });
-    }
-    // The season starts in week 1 and is as long as it needs to be (the
-    // weeks setting is the most it may use).
-    const shift = Math.min(...games.map(g => g.week)) - 1;
-    if (shift > 0) for (const g of games) g.week -= shift;
-    season.regWeeks = Math.max(1, ...games.map(g => g.week));
-    return games;
+    return confThenTrim();
   }
 
   for (let week = 1; week <= REG; week++) {

@@ -71,12 +71,35 @@ check('men\'s: a separate league of 14, two conferences of 7, a 6-team field', (
   const c = {}, h = {}, tot = {}, day = new Set();
   for (const g of mreg) for (const t of [g.home, g.away]) { tot[t] = (tot[t] || 0) + 1; const k = `${t}|${g.week}|${g.day}`; assert.ok(!day.has(k), k); day.add(k); }
   for (const g of mreg.filter(g => g.confGame)) { c[g.home] = (c[g.home] || 0) + 1; c[g.away] = (c[g.away] || 0) + 1; h[g.home] = (h[g.home] || 0) + 1; }
-  for (const t of Object.keys(ms.teams)) { assert.equal(c[t], 12); assert.equal(h[t], 6); assert.equal(tot[t], 19, `${t} ${tot[t]}`); }
-  // Everyone in the other conference exactly once, before conference play.
-  const nc = mreg.filter(g => !g.confGame), seen = new Set();
-  for (const g of nc) { assert.notEqual(ms.teams[g.home].conference, ms.teams[g.away].conference); const k = [g.home, g.away].sort().join(); assert.ok(!seen.has(k), k); seen.add(k); }
-  assert.equal(seen.size, 49);
+  for (const t of Object.keys(ms.teams)) { assert.equal(c[t], 12); assert.equal(h[t], 6); assert.equal(tot[t], 20, `${t} ${tot[t]}`); }
+  // Non-conference: four weekends before conference play, two matches each,
+  // at an invitational (2 + 2 teams from the two conferences) or a two-match
+  // series at one team's home. Conference rivals only meet in conference.
+  assert.equal(ms.settings.nonConf, 'mixed');
+  const nc = mreg.filter(g => !g.confGame);
+  for (const g of nc) assert.notEqual(ms.teams[g.home].conference, ms.teams[g.away].conference);
   assert.ok(Math.max(...nc.map(g => g.week)) < Math.min(...mreg.filter(g => g.confGame).map(g => g.week)));
+  assert.deepEqual([...new Set(nc.map(g => g.week))].sort(), [1, 2, 3, 4]);
+  const evs = {};
+  for (const g of nc.filter(g => g.tourney)) (evs[g.tourney] ||= []).push(g);
+  assert.ok(Object.keys(evs).length >= 4, 'invitationals every week');
+  for (const gs of Object.values(evs)) {
+    const ts = new Set(gs.flatMap(g => [g.home, g.away]));
+    assert.equal(ts.size, 4); assert.equal(gs.length, 4);
+    assert.deepEqual([...new Set(gs.map(g => g.day))].sort(), ['Fri', 'Sat']);
+  }
+  for (const w of [1, 2, 3, 4]) {
+    const series = nc.filter(g => g.week === w && !g.tourney), pairs = {};
+    for (const g of series) (pairs[[g.home, g.away].join()] ||= []).push(g.day);
+    for (const days of Object.values(pairs)) assert.deepEqual(days.sort(), ['Fri', 'Sat'], 'a series: the same home team Friday and Saturday');
+    assert.equal(new Set(nc.filter(g => g.week === w).flatMap(g => [g.home, g.away])).size, 14, `everyone plays in week ${w}`);
+  }
+  // "Everyone once" is still a setting.
+  const O = newLeague({ side: 'men' }), os = currentSeason(O);
+  os.settings.nonConf = 'once'; rebuildSchedule(os, null);
+  const onc = os.games.filter(g => g.type === 'regular' && !g.confGame);
+  assert.equal(new Set(onc.map(g => [g.home, g.away].sort().join())).size, 49);
+  assert.equal(onc.length, 49);
   assert.equal(ms.settings.mcwsName, 'AAU National Tournament');
   // Spring sport: the season starts in week 1 and is only as long as it needs.
   assert.equal(Math.min(...mreg.map(g => g.week)), 1);
@@ -100,6 +123,19 @@ check('men\'s: a separate league of 14, two conferences of 7, a 6-team field', (
   assert.equal(Object.keys(currentSeason(M).teams).length, 14);
   // The women's league is untouched by the men's.
   assert.equal(Object.keys(currentSeason(newLeague()).teams).length, 72);
+});
+
+check('men\'s saves switch to invitationals or series', () => {
+  const M = newLeague({ side: 'men' }), ms = currentSeason(M);
+  ms.settings.nonConf = 'once'; rebuildSchedule(ms, null); delete M.nonConfVersion;
+  migrateLeague(M);
+  assert.equal(ms.settings.nonConf, 'mixed');
+  assert.ok(ms.games.some(g => g.tourney), 'an unstarted season gets the new schedule');
+  migrateLeague(M);
+  ms.settings.nonConf = 'once'; migrateLeague(M);
+  assert.equal(ms.settings.nonConf, 'once', 'once switched, the commissioner can pick "everyone once" again');
+  const W = newLeague(); delete W.nonConfVersion; migrateLeague(W);
+  assert.notEqual(currentSeason(W).settings.nonConf, 'mixed', 'the women\'s league is untouched');
 });
 
 check('logos from the AAU Dynasty', () => {
