@@ -13,10 +13,10 @@
 // supers and mcws. The format is locked into the season when the field is
 // announced.
 
-import { blankGame, DAY_ORDER } from './schedule.js?v=20261104004950';
-import { records, rpi, confStandings, conferences, isFinal, winnerOf, loserOf, regularSeasonDone, regSeasonChamp, regSeasonChamps, quadrants } from './standings.js?v=20261104004950';
-import { generatePoll } from './polls.js?v=20261104004950';
-import { hashStr } from './util.js?v=20261104004950';
+import { blankGame, DAY_ORDER } from './schedule.js?v=20261104170801';
+import { records, rpi, confStandings, conferences, isFinal, winnerOf, loserOf, regularSeasonDone, regSeasonChamp, regSeasonChamps, quadrants } from './standings.js?v=20261104170801';
+import { generatePoll } from './polls.js?v=20261104170801';
+import { hashStr } from './util.js?v=20261104170801';
 
 // ---------- tournament format ----------
 
@@ -485,7 +485,7 @@ function advanceEvent(season, ev, { type, week, name }) {
       const atHostAsVisitor = hosted && flip;
       const g = blankGame(season, {
         type, week, day: node.day,
-        order: node.t != null ? node.t : DAY_ORDER[node.day] + (type !== 'conf' && ['Mon', 'Tue', 'Wed'].includes(node.day) ? 7 : 0) + (node.key === 'G6' ? 0.5 : 0) + (node.depth || 0) * 0.01,
+        order: node.t != null ? node.t : DAY_ORDER[node.day] + (type !== 'conf' && nextWeekGame(ev, node) ? 7 : 0) + (node.key === 'G6' ? 0.5 : 0) + (node.depth || 0) * 0.01,
         home, away, neutral: !hosted || atHostAsVisitor, ...(atHostAsVisitor ? { site: ev.host } : {}), event: ev.id, node: node.key,
         label: `${name} · ${node.label}`,
         ...(ev.kind === 'series' ? { series: ev.id, bestOf: 3 } : node.key[0] === 'F' && ev.kind === 'mcws' ? { series: `${ev.id}-finals`, bestOf: 3 } : {}),
@@ -1118,6 +1118,28 @@ export function postseasonRecord(season, team) {
     conf = { ...wl(gs), champ: ev.champion === team, out: done && ev.champion !== team && last ? (nodeOf(ev, last.node)?.label || '').replace(/ \(.*\)$/, '') : null, ev: ev.id };
   }
   return { ncaa: p.field?.some(f => f.team === team) || ncaaGames.length ? wl(ncaaGames) : null, conf };
+}
+
+// A Monday-to-Wednesday game comes after the weekend before it only when an
+// earlier round of its event was played later in the week (a Sunday
+// semifinal, then a Monday final): `order` 7 or more. One that opens its
+// event (the men's 6-team field's Wednesday first round) comes first.
+export function nextWeekGame(ev, node) {
+  const d = DAY_ORDER[node.day];
+  if (!(d <= DAY_ORDER.Wed)) return false;
+  return (ev?.nodes || []).some(n => (n.depth || 0) < (node.depth || 0) && DAY_ORDER[n.day] > d);
+}
+// Games saved before that rule were filed after the weekend whenever they
+// were played Monday to Wednesday. Returns true when it moved any.
+export function fixEarlyWeekOrder(season) {
+  let moved = false;
+  for (const ev of allEvents(season)) for (const node of ev.nodes || []) {
+    const g = node.gameId != null && season.games.find(x => x.id === node.gameId);
+    if (!g || g.type === 'regular' || g.type === 'conf' || !((g.order ?? 0) >= 7) || nextWeekGame(ev, node)) continue;
+    if (!['Mon', 'Tue', 'Wed'].includes(g.day)) continue;
+    g.order -= 7; moved = true;
+  }
+  return moved;
 }
 
 export function allEvents(season) {
