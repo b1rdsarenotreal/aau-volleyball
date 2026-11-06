@@ -1,14 +1,14 @@
 // Season pages: home, schedule, standings, rankings and postseason.
 
-import { ctx, S, app, modal, $, $$, esc, toast, changed, persist, cache, team, teamOptions, teamNames, confLogo, confHref, confColor, confInfo, gameCard, compactCard, placeholderCard, bindGameCards, openGame, resultText, DAY_NAMES, readableOn, teamInfo, logoImg, teamHref, seasonLabel } from './ui.js?v=20261106121913';
-import { isFinal, winnerOf, records, rpi, confStandings, conferences, regSeasonChamp, regSeasonChamps, TIEBREAKERS, quadrants, quadCuts, isIndependent, INDEPENDENT } from './standings.js?v=20261106121913';
-import { latestPoll, generatePoll, pollRankMap, pollSizeOf, VOTER_PANEL, voterStyle, votersOf, addRandomVoter, removeVoter } from './polls.js?v=20261106121913';
-import { ovr } from './sim.js?v=20261106121913';
-import { simGames, addGame, weekName } from './league.js?v=20261106121913';
-import { confClashes, CONF_FORMATS, confFormatName, confKind , regionalFirstRound } from './postseason.js?v=20261106121913';
-import { COMMITTEE_TIERS, gameVenue, COMMITTEE_SHORT, committeeSheet, compareTeams, mcwsVenue, postWeeks, regWeeksOf, ncaaConfig, hasSupers, noRegionals, fieldSize, wsTeams, formatSummary, shownSeed, postseasonBonus, defaultConfTourneySize, confTourneySeeds, reseedConfTourney, proposeField, lockField, pods, nodeTeams, nodeNeeded, runnerUp, committeeOrder, autoBids, refLabel, setConfFormat, ensureLayout, confHost, setConfHost, mcwsHistory, selectionBoard, setAtLarge, confirmField, unconfirmField, bracketology, BRACKETOLOGY_FROM_WEEK } from './postseason.js?v=20261106121913';
-import { fmtPct, hashStr } from './util.js?v=20261106121913';
-import { DAY_ORDER, CONF_WEEKENDS, applyConfWeekend } from './schedule.js?v=20261106121913';
+import { ctx, S, app, modal, $, $$, esc, toast, changed, persist, cache, team, teamOptions, teamNames, confLogo, confHref, confColor, confInfo, gameCard, compactCard, placeholderCard, bindGameCards, openGame, resultText, DAY_NAMES, readableOn, teamInfo, logoImg, teamHref, seasonLabel } from './ui.js?v=20261106122828';
+import { isFinal, winnerOf, records, rpi, confStandings, conferences, regSeasonChamp, regSeasonChamps, TIEBREAKERS, quadrants, quadCuts, isIndependent, INDEPENDENT } from './standings.js?v=20261106122828';
+import { latestPoll, generatePoll, pollRankMap, pollSizeOf, VOTER_PANEL, voterStyle, votersOf, addRandomVoter, removeVoter } from './polls.js?v=20261106122828';
+import { ovr } from './sim.js?v=20261106122828';
+import { simGames, addGame, weekName } from './league.js?v=20261106122828';
+import { confClashes, CONF_FORMATS, confFormatName, confKind , regionalFirstRound } from './postseason.js?v=20261106122828';
+import { COMMITTEE_TIERS, gameVenue, COMMITTEE_SHORT, committeeSheet, compareTeams, mcwsVenue, postWeeks, regWeeksOf, ncaaConfig, hasSupers, noRegionals, fieldSize, wsTeams, formatSummary, shownSeed, postseasonBonus, defaultConfTourneySize, confTourneySeeds, reseedConfTourney, proposeField, lockField, pods, nodeTeams, nodeNeeded, runnerUp, committeeOrder, autoBids, refLabel, setConfFormat, ensureLayout, confHost, setConfHost, mcwsHistory, selectionBoard, setAtLarge, confirmField, unconfirmField, bracketology, BRACKETOLOGY_FROM_WEEK } from './postseason.js?v=20261106122828';
+import { fmtPct, hashStr } from './util.js?v=20261106122828';
+import { DAY_ORDER, CONF_WEEKENDS, applyConfWeekend } from './schedule.js?v=20261106122828';
 
 // How an invitational is played, for its standings box: a round robin, or
 // (men's) each team playing the teams from the other conference; and its
@@ -797,7 +797,7 @@ function dragSort(tbody, onMove) {
     const handle = e.target.closest('[data-drag]');
     if (!handle || e.button > 0) return;
     e.preventDefault();
-    const rows = [...tbody.querySelectorAll('tr')];
+    const rows = [...tbody.querySelectorAll('tr[data-seed-i]')];
     const from = +handle.dataset.drag, row = rows[from];
     let to = from, lastY = e.clientY, raf = 0;
     row.classList.add('dragging');
@@ -888,17 +888,35 @@ function renderField(root) {
     if (c.better !== a) return `<span class="edge-flip" title="The committee would put ${esc(b)} ahead (${c.tier ? `Tier ${c.tier}: ${esc(full)}` : 'RPI'})">▼ ${c.tier ? `T${c.tier}` : 'RPI'} favors #${field[i + 1].seed}</span>`;
     return `<span title="${esc(a)} over ${esc(b)}: ${c.tier ? `Tier ${c.tier}, ${esc(full)}` : 'every tier even, higher RPI'}">${c.tier ? `T${c.tier} · ${esc(list)}` : 'RPI'}</span>`;
   };
-  const seedRows = field.map((f, i) => { const t = f.team, x = Q[t].rec; return `<tr class="seed-row${i < cfg.regionals ? ' host' : ''}${i === cfg.regionals - 1 ? ' host-cut' : ''}" data-seed-i="${i}">
+  // Seed lines: the 1 seeds, the 2 seeds… (national seeds in groups of one
+  // per regional), each team's regional and its seed there. A team the
+  // conference rule moved off its line shows the seed it plays as.
+  const podList = pods(field, cfg.regionals, s);
+  const podOf = {};
+  podList.forEach((teams, r) => teams.forEach((t, k) => { podOf[t] = { r, k, head: teams[0] }; }));
+  const lines = !noRegionals(cfg) && cfg.regionals > 0;
+  const COLS = (editable ? 12 : 11) - (lines ? 0 : 1);
+  const lineHead = i => {
+    if (!lines || i % cfg.regionals) return '';
+    const L = i / cfg.regionals + 1, last = Math.min(field.length, i + cfg.regionals);
+    return `<tr class="seed-line"><td colspan="${COLS}"><b>${L} seeds</b> <span class="muted">· national seeds ${i + 1}–${last}${L === 1 ? ' · host the regionals' : ''}</span></td></tr>`;
+  };
+  const regCell = (t, i) => {
+    const x = podOf[t];
+    if (!x) return '<td class="seed-reg muted">–</td>';
+    const moved = lines && x.k !== Math.floor(i / cfg.regionals);
+    return `<td class="seed-reg">${x.k === 0 ? '<span class="muted">Top seed</span>' : `with ${team(x.head, { rank: false, size: 16 })}`}${moved ? ` <span class="badge" title="Moved to keep conference rivals apart in the first round">plays as a ${x.k + 1}</span>` : ''}</td>`;
+  };
+  const seedRows = field.map((f, i) => { const t = f.team, x = Q[t].rec; return `${lineHead(i)}<tr class="seed-row${i < cfg.regionals ? ' host' : ''}${i === cfg.regionals - 1 ? ' host-cut' : ''}" data-seed-i="${i}">
     ${editable ? `<td class="drag-cell"><span class="drag-handle" tabindex="0" role="button" data-drag="${i}" aria-label="Move ${esc(t)} (seed ${f.seed}). Drag, or use the up and down arrow keys" title="Drag to move">⠿</span></td>` : ''}
     <td class="num seed-n">${f.seed}</td><td class="seed-team">${team(t, { rank: false, size: 16 })}${i < cfg.regionals ? ' <span class="badge gold">Host</span>' : ''}${f.bid === 'auto' ? ' <span class="badge auto" title="Automatic qualifier">AQ</span>' : ''}</td>
-    <td class="num">${recs[t].w}-${recs[t].l}</td><td class="num key">${r[t]?.rank ?? ''}</td>${[0, 1, 2, 3].map(k => `<td class="num q${k + 1}${x[k].w + x[k].l ? '' : ' muted'}">${x[k].w}-${x[k].l}</td>`).join('')}<td class="num">${r[t]?.sosRank ?? ''}</td><td class="edge">${edge(i)}</td></tr>`; }).join('');
+    <td class="num">${recs[t].w}-${recs[t].l}</td><td class="num key">${r[t]?.rank ?? ''}</td>${[0, 1, 2, 3].map(k => `<td class="num q${k + 1}${x[k].w + x[k].l ? '' : ' muted'}">${x[k].w}-${x[k].l}</td>`).join('')}<td class="num">${r[t]?.sosRank ?? ''}</td>${lines ? regCell(t, i) : ''}<td class="edge">${edge(i)}</td></tr>`; }).join('');
   const seeding = `<div class="card sel-seeds"><h2 style="margin:0 0 4px">Seeds 1–${field.length}</h2>
     ${confirmed ? `<div class="small muted" style="margin-bottom:8px">${editable ? 'Drag a team by its handle (⠿) to move it; on a keyboard, focus the handle and use the arrow keys. ' : ''}${noRegionals(cfg) ? `${formatSummary(cfg).replace(/<[^>]+>/g, '').replace(/^Format: /, '')}</div>` : `The top ${cfg.regionals} national seeds host the regionals. Regionals are built serpentine (national seed 1 with seed ${cfg.regionals * 2}${cfg.perRegional > 2 ? `, ${cfg.regionals * 2 + 1}` : ''}…); then teams on the same seed line trade regionals so conference rivals don't meet in the first round, and each team gets a regional seed, 1 to ${cfg.perRegional}.</div>`}
-      <div class="table-wrap"><table class="sel-table seed-table"><thead><tr>${editable ? '<th aria-label="Move"></th>' : ''}<th class="num">Seed</th><th>Team</th><th class="num">Rec</th><th class="num key" title="RPI rank">RPI</th>${QHEAD}<th class="num" title="Strength-of-schedule rank">SOS</th><th title="Why this team is ahead of the next seed: the deciding tier and the criteria it won there">Over next</th></tr></thead><tbody class="seed-list">${seedRows}</tbody></table></div>
+      <div class="table-wrap"><table class="sel-table seed-table"><thead><tr>${editable ? '<th aria-label="Move"></th>' : ''}<th class="num">Seed</th><th>Team</th><th class="num">Rec</th><th class="num key" title="RPI rank">RPI</th>${QHEAD}<th class="num" title="Strength-of-schedule rank">SOS</th>${lines ? '<th title="The regional this team goes to (its top seed)">Regional</th>' : ''}<th title="Why this team is ahead of the next seed: the deciding tier and the criteria it won there">Over next</th></tr></thead><tbody class="seed-list">${seedRows}</tbody></table></div>
       ${editable ? '<div class="row" style="margin-top:12px;gap:8px"><button class="btn primary" id="f-lock">Announce the field</button><button class="btn" id="f-unconfirm">Change teams</button></div>' : ''}`
       : `<p class="muted small">Pick the at-large teams and confirm them, then set the seeds here.</p>`}
   </div>`;
-  const podList = pods(field, cfg.regionals, s);
   root.innerHTML = `
     ${editable ? `<div class="hint">1. Pick the at-large teams (automatic qualifiers are in). 2. Confirm the ${B.size} teams. 3. Order seeds 1–${B.size}; the regional preview updates as you go. 4. Announce the field.<br>${formatSummary(cfg)}</div>` : ''}
     ${confirmed
