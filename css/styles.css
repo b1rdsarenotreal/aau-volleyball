@@ -913,3 +913,10 @@ button.bx-sg:hover { border-color: var(--muted); }
 .off-table td:has(> .coach-cell), .off-table td:first-child { white-space: normal; }
 .off-table .coach-cell { flex-wrap: wrap; row-gap: 3px; max-width: 290px; }
 .off-table .coach-cell .prestige, .off-table .coach-cell .badge.fit { margin-left: 0; order: 3; }
+
+/* First-round matchups in the regional preview (regionals of more than 5) */
+.reg-prev-sub { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); margin: 2px 0 4px; }
+.reg-prev-pair { border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
+.reg-prev-pair + .reg-prev-pair { margin-top: 6px; }
+.reg-prev-pair .reg-prev-row + .reg-prev-row { border-top: 1px dotted var(--line); }
+.reg-prev-row.bye .reg-prev-team { font-style: italic; }
