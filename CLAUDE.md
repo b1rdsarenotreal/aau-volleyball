@@ -43,6 +43,13 @@ include this repo.)
   conference's two, Friday and Saturday) and the rest a two-match series
   against a team from another conference; 'once' (everyone in the other
   conference once) is still a setting. Women's uses 'invitationals'.
+- Regionals avoid first-round matchups between conference rivals
+  (`avoidConferenceMatchups` in `js/postseason.js`, the owner's rule): after
+  the serpentine, teams on one seed line trade regionals (lowest lines
+  first), then, as a last resort, a team moves one seed line; the top line
+  never moves. `pods(field, n, season)` applies it, so bracketology, the
+  selection preview and the announced field agree. Bracketology and the
+  preview show each regional's first-round matchups.
 
 ## Before every commit
 
