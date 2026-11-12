@@ -88,7 +88,7 @@ with sync_playwright() as p:
     women_champ = pg.evaluate("() => document.querySelector('.banner .big')?.textContent || ''")
     visit(pg, "#/home")
     pg.click('#side-switch [data-side="men"]')
-    pg.wait_for_function("document.getElementById('league-name').textContent === \"AAU Men's Volleyball\"", timeout=15000)
+    pg.wait_for_function("document.getElementById('league-name').textContent === \"Men's Volleyball\"", timeout=15000)
     t = visit(pg, "#/teams", "g-men-teams")
     assert "Penn State" in t and "Texas" not in t
     t = visit(pg, "#/conferences", "g-men-conferences")
@@ -103,7 +103,7 @@ with sync_playwright() as p:
     for h in ["#/home", "#/standings", "#/rankings", "#/records", "#/history", "#/settings"]:
         visit(pg, h, "g-men-" + h.strip("#/"))
     pg.click('#side-switch [data-side="women"]')
-    pg.wait_for_function("document.getElementById('league-name').textContent === 'AAU Volleyball'", timeout=15000)
+    pg.wait_for_function("document.getElementById('league-name').textContent === 'Volleyball'", timeout=15000)
     t = visit(pg, "#/postseason")
     assert "National Champion" in t and (not women_champ or women_champ in t), "the women's dynasty is unchanged"
 
