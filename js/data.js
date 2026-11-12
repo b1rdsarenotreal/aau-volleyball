@@ -20,8 +20,8 @@
 // The rest (NYU, Brandeis, Johns Hopkins, MIT, Caltech, UC Santa Cruz, McGill,
 // Toronto) are estimates from each program's usual level.
 
-import { DEFAULT_LOGOS } from './logo-import.js?v=20261111124327';
-import { MEN_CONFERENCES, MEN_TEAMS, MEN_COACHES } from './data-men.js?v=20261111124327';
+import { DEFAULT_LOGOS } from './logo-import.js?v=20261111204958';
+import { MEN_CONFERENCES, MEN_TEAMS, MEN_COACHES } from './data-men.js?v=20261111204958';
 
 export const START_YEAR = 2030;
 
@@ -208,7 +208,7 @@ export const SITES = {
 };
 
 // Names the logo lists may know a school by.
-export const LOGO_ALIASES = { 'Penn': 'Pennsylvania', 'Miami': 'Miami', 'UC Santa Barbara': 'UC Santa Barbara', 'George Washington': 'George Washington' };
+export const LOGO_ALIASES = { 'Penn': 'Pennsylvania', 'Miami': 'Miami', 'UC Santa Barbara': 'UC Santa Barbara', 'George Washington': 'George Washington', 'UConn': 'Connecticut' };
 
 // Head coaches: each program's real head coach for the 2026 season (school
 // athletics sites, checked October 2026). USC's Brad Keller has been on leave
