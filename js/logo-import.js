@@ -10,6 +10,8 @@
 
 export const AAU_LOGO_SET = 'aau-dynasty-2026-11';
 export const DEFAULT_LOGOS = {
+  // The bobcat with a gold UCM, made for the owner (Nov. 2026); hosted with this app.
+  'UC Merced': 'https://b1rdsarenotreal.github.io/aau-volleyball/img/schools/uc-merced.svg',
   Brandeis: 'https://thumb.wikimedia.org/wikipedia/commons/thumb/b/b8/Brandeis_athletics_logo_2024.png/330px-Brandeis_athletics_logo_2024.png?utm_source=en.wikipedia.org&utm_campaign=parser&utm_content=thumbnail',
   Caltech: 'https://upload.wikimedia.org/wikipedia/en/f/fb/Caltech_beavers_logo.png?utm_source=en.wikipedia.org&utm_campaign=parser&utm_content=thumbnail_unscaled',
   'UC Irvine': 'https://thumb.wikimedia.org/wikipedia/commons/thumb/b/b6/UC_Irvine_Anteaters_logo.svg/250px-UC_Irvine_Anteaters_logo.svg.png?utm_source=en.wikipedia.org&utm_campaign=parser&utm_content=thumbnail',
