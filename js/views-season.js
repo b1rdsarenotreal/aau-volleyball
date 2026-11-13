@@ -1,14 +1,14 @@
 // Season pages: home, schedule, standings, rankings and postseason.
 
-import { ctx, S, app, modal, $, $$, esc, toast, changed, persist, cache, team, teamOptions, teamNames, confLogo, confHref, confColor, confInfo, gameCard, compactCard, placeholderCard, bindGameCards, openGame, resultText, DAY_NAMES, readableOn, teamInfo, logoImg, teamHref, seasonLabel } from './ui.js?v=20261112194924';
-import { isFinal, winnerOf, records, rpi, confStandings, conferences, regSeasonChamp, regSeasonChamps, TIEBREAKERS, quadrants, quadCuts, isIndependent, INDEPENDENT } from './standings.js?v=20261112194924';
-import { latestPoll, generatePoll, pollRankMap, pollSizeOf, VOTER_PANEL, voterStyle, votersOf, addRandomVoter, removeVoter } from './polls.js?v=20261112194924';
-import { ovr } from './sim.js?v=20261112194924';
-import { simGames, addGame, weekName } from './league.js?v=20261112194924';
-import { confClashes, CONF_FORMATS, confFormatName, confKind , regionalFirstRound } from './postseason.js?v=20261112194924';
-import { COMMITTEE_TIERS, gameVenue, COMMITTEE_SHORT, committeeSheet, compareTeams, mcwsVenue, postWeeks, regWeeksOf, ncaaConfig, hasSupers, noRegionals, fieldSize, wsTeams, formatSummary, shownSeed, postseasonBonus, defaultConfTourneySize, confTourneySeeds, reseedConfTourney, proposeField, lockField, pods, nodeTeams, nodeNeeded, runnerUp, committeeOrder, autoBids, refLabel, setConfFormat, ensureLayout, confHost, setConfHost, mcwsHistory, selectionBoard, setAtLarge, confirmField, unconfirmField, bracketology, BRACKETOLOGY_FROM_WEEK } from './postseason.js?v=20261112194924';
-import { fmtPct, hashStr } from './util.js?v=20261112194924';
-import { DAY_ORDER, CONF_WEEKENDS, applyConfWeekend } from './schedule.js?v=20261112194924';
+import { ctx, S, app, modal, $, $$, esc, toast, changed, persist, cache, team, teamOptions, teamNames, confLogo, confHref, confColor, confInfo, gameCard, compactCard, placeholderCard, bindGameCards, openGame, resultText, DAY_NAMES, readableOn, teamInfo, logoImg, teamHref, seasonLabel } from './ui.js?v=20261112232256';
+import { isFinal, winnerOf, records, rpi, confStandings, conferences, regSeasonChamp, regSeasonChamps, TIEBREAKERS, quadrants, quadCuts, isIndependent, INDEPENDENT } from './standings.js?v=20261112232256';
+import { latestPoll, generatePoll, pollRankMap, pollSizeOf, VOTER_PANEL, voterStyle, votersOf, addRandomVoter, removeVoter } from './polls.js?v=20261112232256';
+import { ovr } from './sim.js?v=20261112232256';
+import { simGames, addGame, weekName } from './league.js?v=20261112232256';
+import { confClashes, CONF_FORMATS, confFormatName, confKind , regionalFirstRound } from './postseason.js?v=20261112232256';
+import { COMMITTEE_TIERS, gameVenue, COMMITTEE_SHORT, committeeSheet, compareTeams, mcwsVenue, postWeeks, regWeeksOf, ncaaConfig, hasSupers, noRegionals, fieldSize, wsTeams, formatSummary, shownSeed, postseasonBonus, defaultConfTourneySize, confTourneySeeds, reseedConfTourney, proposeField, lockField, pods, nodeTeams, nodeNeeded, runnerUp, committeeOrder, autoBids, refLabel, setConfFormat, ensureLayout, confHost, setConfHost, mcwsHistory, selectionBoard, setAtLarge, confirmField, unconfirmField, bracketology, BRACKETOLOGY_FROM_WEEK } from './postseason.js?v=20261112232256';
+import { fmtPct, hashStr } from './util.js?v=20261112232256';
+import { DAY_ORDER, CONF_WEEKENDS, applyConfWeekend } from './schedule.js?v=20261112232256';
 // Win or loss for a team (no ties in this sport).
 const resultFor = (g, t) => (winnerOf(g) === t ? 'W' : 'L');
 
@@ -709,7 +709,7 @@ function eventBracket(ev, seedFn, { stack = false, colw = BK.COLW, cw = BK.CW, h
 
   const cell = node => {
     const label = node.code || node.label;
-    if (node.gameId) { const g = s.games.find(x => x.id === node.gameId); if (g) return compactCard({ ...g, label }, seedFn); }
+    if (node.gameId) { const g = s.games.find(x => x.id === node.gameId); if (g) return compactCard({ ...g, label }, seedFn, { top: nodeTeams(ev, node)[0] }); }
     const [a, b] = nodeTeams(ev, node);
     if (a === 'BYE' || b === 'BYE') {
       const t = a === 'BYE' ? b : a;
@@ -1073,7 +1073,7 @@ function renderBoard(root) {
     ${p.mcws ? p.mcws.nodes.map((nd, i, all) => {
       const g = nd.gameId && s.games.find(x => x.id === nd.gameId), label = nd.code || nd.label, sd = t => shownSeed(s, t);
       const [a, b] = nodeTeams(p.mcws, nd), slot = (t, ref) => t || (refLabel(p.mcws, ref) ? { text: refLabel(p.mcws, ref) } : null);
-      return `<div class="bb-fgame ${i === all.length - 1 ? 'last' : ''}">${g ? compactCard({ ...g, label }, sd) : placeholderCard(label, [slot(a, nd.a), slot(b, nd.b)], sd)}</div>`;
+      return `<div class="bb-fgame ${i === all.length - 1 ? 'last' : ''}">${g ? compactCard({ ...g, label }, sd, { top: a }) : placeholderCard(label, [slot(a, nd.a), slot(b, nd.b)], sd)}</div>`;
     }).join('') : `<p class="bb-wait">The region winners meet here.</p>`}
     ${champ ? `<div class="bb-champ"><span class="bb-clogo">${logoImg(ci, 64)}</span><span class="bb-ckick">${seasonLabel(s.year)} National Champion</span><span class="bb-cname">${esc(champ)}</span></div>` : ''}</div>`;
   root.innerHTML = `<div class="bb-scroll"><div class="bb">
