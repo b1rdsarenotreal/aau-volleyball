@@ -24,6 +24,20 @@ include this repo.)
   regional winners), `mcws` = the Final Four. The owner chose the names
   Regional and Super Regional. User-facing text never says MCWS, series,
   innings, runs or hits.
+- The AAU look (Nov. 2026, ported from AAU Field Hockey, built to match the
+  owner's mockups): a two-row top bar (brand row, then the menu); scoreboard
+  cards (`gameCard`: the conference's color bar and logo, a row per team with
+  the points in each set and the final, the loser faded); standings with the conference
+  list down the side (`st-*`), each conference in its colors (`confVars`,
+  `confHead`; conference W-L, GB), All conferences compact, the last 5 (postseason
+  included) opening the poll's match pop-up; the poll as a board (`pb-*`)
+  beside movers, receiving votes and dropped out, under the No. 1 team's
+  card; the team page header in the team's colors with title banners and a
+  numbers strip (`teamHero`) and schedule boxes (`ts2-*`: one regular-season
+  box, conference logo on conference matchs, a box per tournament, a venue
+  column, the result opening the box score); Postseason → Full bracket
+  (`renderBoard`). Navy `--board`, gold `--optic`; Oswald, Saira Condensed,
+  Inter.
 - On-screen text says "match", not "game".
 - Women's and men's: `league.side` is 'women' (or missing, older saves) or
   'men'. Each side has its own save key (`js/store.js`), seed data
