@@ -1,16 +1,16 @@
 // Shared UI state and pieces used by every page: the league, saving,
 // team labels and logos, game cards, and the game editor.
 
-import { saveLeague } from './store.js?v=20261112232256';
-import { logoFor } from './logos.js?v=20261112232256';
-import { LOGO_ALIASES } from './data.js?v=20261112232256';
-import { ovr, winProbability } from './sim.js?v=20261112232256';
-import { records, isFinal, winnerOf, sameConf } from './standings.js?v=20261112232256';
-import { latestPoll, pollRankMap } from './polls.js?v=20261112232256';
-import { afterChange, applyResult, clearResult, simResult, deleteGame, weekName, estimateHE } from './league.js?v=20261112232256';
-import { regWeeksOf, shownSeed, regionalSeed, mcwsVenue, gameVenue } from './postseason.js?v=20261112232256';
-import { DAY_ORDER } from './schedule.js?v=20261112232256';
-import { esc } from './util.js?v=20261112232256';
+import { saveLeague } from './store.js?v=20261113184150';
+import { logoFor } from './logos.js?v=20261113184150';
+import { LOGO_ALIASES } from './data.js?v=20261113184150';
+import { ovr, winProbability } from './sim.js?v=20261113184150';
+import { records, isFinal, winnerOf, sameConf } from './standings.js?v=20261113184150';
+import { latestPoll, pollRankMap } from './polls.js?v=20261113184150';
+import { afterChange, applyResult, clearResult, simResult, deleteGame, weekName, estimateHE } from './league.js?v=20261113184150';
+import { regWeeksOf, shownSeed, regionalSeed, mcwsVenue, gameVenue } from './postseason.js?v=20261113184150';
+import { DAY_ORDER } from './schedule.js?v=20261113184150';
+import { esc } from './util.js?v=20261113184150';
 
 // Logo files in this app (img/conf/) carry this release's version, like the
 // scripts do, so a redrawn logo shows right away instead of a cached copy.
@@ -263,7 +263,9 @@ export function gameCard(g) {
   const where = venueText(s, g);
   const conf = gameConf(s, g);
   const tag = conf && g.type === 'regular' ? '' : gameTag(g, true);
-  const n = Math.max(g.homeLine?.length || 0, g.awayLine?.length || 0);
+  // Always at least three set columns, so an upcoming match (no sets yet)
+  // keeps the same rows as a finished one.
+  const n = Math.max(3, g.homeLine?.length || 0, g.awayLine?.length || 0);
   const w = fin ? winnerOf(g) : null;
   const ranks = fin ? cache.ranksAt(g.week) : cache.ranks();
   const row = (t, line, R) => {

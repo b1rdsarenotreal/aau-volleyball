@@ -1200,3 +1200,9 @@ button.bx-sg:hover { border-color: var(--muted); }
 .ts2-wl { display: grid; place-items: center; width: 24px; height: 24px; border-radius: 6px; font: 700 12px var(--body); color: #fff; }
 .ts2-wl.w { background: #1f6f43; } .ts2-wl.l { background: #b4343a; } .ts2-wl.t { background: #b9c3d3; color: #0b1f3a; }
 @media (max-width: 720px) { .team-hero2, .team-tabs { margin-left: -12px; margin-right: -12px; } .th-top { padding: 20px 14px; } .th-strip { margin: 0 14px; } .th-name { font-size: 36px; } .th-logo { width: 84px; height: 84px; } .th-logo > * { zoom: .68; } }
+
+/* Volleyball cards carry up to five two-digit set scores: wider set columns
+   and wider cards (three or four to a row). */
+.games { grid-template-columns: repeat(auto-fill, minmax(min(100%, 400px), 1fr)); }
+.sc-row { grid-template-columns: 38px minmax(0, 1fr) repeat(var(--n), 22px) 34px; }
+@media (max-width: 420px) { .sc-row { grid-template-columns: 30px minmax(0, 1fr) repeat(var(--n), 18px) 28px; gap: 4px; } }

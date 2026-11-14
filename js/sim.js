@@ -14,7 +14,7 @@
 // errors, and `innings` is the number of sets played.
 // A simulation is only a suggestion — the commissioner reviews and saves it.
 
-import { rng as makeRng } from './util.js?v=20261112232256';
+import { rng as makeRng } from './util.js?v=20261113184150';
 
 export const OVR_WEIGHTS = { off: 0.4, pit: 0.3, def: 0.3 };
 const ovrExact = t => t.off * OVR_WEIGHTS.off + t.pit * OVR_WEIGHTS.pit + t.def * OVR_WEIGHTS.def;
