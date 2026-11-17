@@ -20,8 +20,8 @@
 // The rest (NYU, Brandeis, Johns Hopkins, MIT, Caltech, UC Santa Cruz, McGill,
 // Toronto) are estimates from each program's usual level.
 
-import { DEFAULT_LOGOS } from './logo-import.js?v=20261116231809';
-import { MEN_CONFERENCES, MEN_TEAMS, MEN_COACHES } from './data-men.js?v=20261116231809';
+import { DEFAULT_LOGOS } from './logo-import.js?v=20261116232155';
+import { MEN_CONFERENCES, MEN_TEAMS, MEN_COACHES } from './data-men.js?v=20261116232155';
 
 export const START_YEAR = 2030;
 
