@@ -57,6 +57,11 @@ include this repo.)
   conference's two, Friday and Saturday) and the rest a two-match series
   against a team from another conference; 'once' (everyone in the other
   conference once) is still a setting. Women's uses 'invitationals'.
+- Invitationals: a team never leaves its event mid-weekend for another
+  match and comes back (the owner's rule, Nov. 2026). In a three-team event
+  the host sits out the middle day (it's home, so it may host a team that's
+  free to travel that day); teams sitting out the first or last day may
+  play a match elsewhere that day.
 - Regionals avoid first-round matchups between conference rivals
   (`avoidConferenceMatchups` in `js/postseason.js`, the owner's rule): after
   the serpentine, teams on one seed line trade regionals (lowest lines

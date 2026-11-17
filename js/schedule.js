@@ -30,9 +30,9 @@
 // When `prev` (last season) is given, conference opponents who met once last
 // year swap home and away.
 
-import { isIndependent } from './standings.js?v=20261116233234';
-import { cityPoint, miles } from './geo.js?v=20261116233234';
-import { rng, shuffle, hashStr } from './util.js?v=20261116233234';
+import { isIndependent } from './standings.js?v=20261117001201';
+import { cityPoint, miles } from './geo.js?v=20261117001201';
+import { rng, shuffle, hashStr } from './util.js?v=20261117001201';
 
 export const DEFAULT_REG_WEEKS = 13;
 export const DEFAULT_TOURNEY_WEEKS = 4;
@@ -350,7 +350,11 @@ export function generateSchedule(season, seed = hashStr(String(season.year)), pr
       }
       if (!done) leftovers.push(t);
     }
-    const byeDay = { Thu: [], Fri: [], Sat: [], Sun: [] };
+    // Teams sitting out a day: `edge` on their event's first or last day (or
+    // with no event), free to play somewhere else; `mid`, hosts sitting out
+    // the middle day, who stay home. Nobody leaves an event mid-weekend for
+    // another match and comes back (the owner's rule, Nov. 2026).
+    const byeDay = Object.fromEntries(['Thu', 'Fri', 'Sat', 'Sun'].map(d => [d, { edge: [], mid: [] }]));
     for (const ev of events) {
       if (ev.length < 3) { leftovers.push(...ev); continue; }
       const host = [...ev].sort((a, b) => homeCount[a] - homeCount[b] || (r() - 0.5))[0];
@@ -360,9 +364,16 @@ export function generateSchedule(season, seed = hashStr(String(season.year)), pr
       // Saturday, others Friday to Sunday.
       const days = r() < 0.5 ? ['Thu', 'Fri', 'Sat'] : ['Fri', 'Sat', 'Sun'];
       const rounds = roundRobin(ev, r);
+      // In a three-team event someone sits out the middle day: make it the
+      // host, who is already home.
+      const hostOut = rounds.findIndex(pairs => pairs.some(([a, b]) => (!a || !b) && (a || b) === host));
+      if (rounds.length === 3 && hostOut >= 0 && hostOut !== 1) [rounds[1], rounds[hostOut]] = [rounds[hostOut], rounds[1]];
       rounds.forEach((pairs, k) => {
         const day = days[k], half = 0;
-        for (const [a, b] of pairs) if (!a || !b) { const t = a || b; if (t) byeDay[day].push(t); }
+        for (const [a, b] of pairs) if (!a || !b) {
+          const t = a || b;
+          if (t) byeDay[day][k > 0 && k < rounds.length - 1 ? 'mid' : 'edge'].push(t);
+        }
         pairs.filter(([a, b]) => a && b).forEach(([a, b], i) => {
           let home, away;
           if (a === host || b === host) { home = host; away = a === host ? b : a; } else [home, away] = orient(a, b);
@@ -374,9 +385,17 @@ export function generateSchedule(season, seed = hashStr(String(season.year)), pr
     // A 3-team event has a team sitting out each day; teams sitting out the
     // same day (and any team left over, on Saturday) meet for a third match,
     // so everyone plays about three that weekend, one a day.
-    byeDay.Sat.push(...leftovers);
-    for (const [day, pool] of Object.entries(byeDay)) {
-      const { pairs } = crossPairs(pool, teams, met, r);
+    byeDay.Sat.edge.push(...leftovers);
+    for (const [day, { edge, mid }] of Object.entries(byeDay)) {
+      // A host sitting out its own event's middle day plays at home, against
+      // a team that's free to travel that day, or rests.
+      for (const h of shuffle(mid, r)) {
+        let j = edge.findIndex(b => !rival(teams, h, b) && !met.has(key(h, b)));
+        if (j < 0) j = edge.findIndex(b => !rival(teams, h, b));
+        if (j < 0) continue;
+        add(week, h, edge.splice(j, 1)[0], { day, order: DAY_ORDER[day] + 0.5 });
+      }
+      const { pairs } = crossPairs(edge, teams, met, r);
       for (const [a, b] of pairs) { const [h, aw] = orient(a, b); add(week, h, aw, { day, order: DAY_ORDER[day] + 0.5 }); }
     }
   };

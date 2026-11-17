@@ -125,6 +125,24 @@ check('men\'s: a separate league of 14, two conferences of 7, a 6-team field', (
   assert.equal(Object.keys(currentSeason(newLeague()).teams).length, 72);
 });
 
+check('nobody leaves an invitational mid-weekend to play elsewhere', () => {
+  const O = { Mon: 0, Tue: 1, Wed: 2, Thu: 3, Fri: 4, Sat: 5, Sun: 6 };
+  for (const side of ['women', 'men']) for (let y = 0; y < 12; y++) {
+    const s = currentSeason(newLeague({ side }));
+    const games = generateSchedule(s, 500 + y), hostOf = {}, by = {};
+    for (const g of games) if (g.tourney && !hostOf[g.tourney]) hostOf[g.tourney] = g.neutral ? g.site : null;
+    for (const g of games) if (g.tourney && !g.neutral) hostOf[g.tourney] ||= g.home;
+    for (const g of games) for (const t of [g.home, g.away]) (by[`${t}|${g.week}`] ||= []).push(g);
+    for (const [k, list] of Object.entries(by)) {
+      const t = k.split('|')[0], ev = list.filter(g => g.tourney);
+      if (!ev.length) continue;
+      const lo = Math.min(...ev.map(g => O[g.day])), hi = Math.max(...ev.map(g => O[g.day]));
+      for (const g of list) if (!g.tourney && O[g.day] > lo && O[g.day] < hi)
+        assert.ok(hostOf[ev[0].tourney] === t && g.home === t && !g.neutral, `${side} ${k}: ${g.away} at ${g.home} on ${g.day} in the middle of ${ev[0].label}`);
+    }
+  }
+});
+
 check('men\'s saves switch to invitationals or series', () => {
   const M = newLeague({ side: 'men' }), ms = currentSeason(M);
   ms.settings.nonConf = 'once'; rebuildSchedule(ms, null); delete M.nonConfVersion;
