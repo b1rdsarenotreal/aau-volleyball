@@ -1,4 +1,4 @@
-import { CONF_LOGO_LINKS } from './data.js?v=20261116232155';
+import { CONF_LOGO_LINKS } from './data.js?v=20261116233234';
 
 // Every AAU member school, for the "AAU school" pick on the Add team form:
 // abbreviation, mascot, colors, city and the conference it plays in in the
@@ -134,6 +134,23 @@ export const AAU_CONFERENCES = {
 // team form fills these in too.
 export const AAU_PROGRAMS = {
   women: {
+    // The owner's new schools (Nov. 2026): home venue only; coaches are added by hand.
+    "Arkansas": { stadium: "Barnhill Arena" },
+    "Baylor": { stadium: "Ferrell Center" },
+    "Houston": { stadium: "Fertitta Center" },
+    "SMU": { stadium: "Moody Coliseum" },
+    "Texas Tech": { stadium: "United Supermarkets Arena" },
+    "UT Dallas": { stadium: "UT Dallas Activity Center" },
+    "Saint Louis": { stadium: "Chaifetz Pavilion" },
+    "Memphis": { stadium: "Elma Roane Fieldhouse" },
+    "Northern Arizona": { stadium: "Rolle Activity Center" },
+    "San Diego State": { stadium: "Peterson Gym" },
+    "Nevada": { stadium: "Virginia Street Gym" },
+    "UNLV": { stadium: "Cox Pavilion" },
+    "Oregon State": { stadium: "Gill Coliseum" },
+    "BYU": { stadium: "Smith Fieldhouse" },
+    "Utah State": { stadium: "Wayne Estes Center" },
+    "Washington State": { stadium: "Bohler Gym" },
     "Florida State": { stadium: "Tully Gym", coach: "Lindsay Allman" },
     "Georgia": { stadium: "Stegeman Coliseum", coach: "Tom Black" },
     "Iowa State": { stadium: "Hilton Coliseum", coach: "Christy Johnson-Lynch" },
@@ -143,6 +160,8 @@ export const AAU_PROGRAMS = {
     "UConn": { stadium: "UConn Volleyball Center", coach: "Ellen Herman-Kimball" },
   },
   men: {
+    // The owner's new schools (Nov. 2026): home venue only; coaches are added by hand.
+    "BYU": { stadium: "Smith Fieldhouse" },
     "UC Merced": { stadium: "Joseph Edward Gallo Recreation & Wellness Center", coach: "Chris Carter" },
   },
 };
