@@ -13,10 +13,10 @@
 // supers and mcws. The format is locked into the season when the field is
 // announced.
 
-import { blankGame, DAY_ORDER } from './schedule.js?v=20261117182452';
-import { sameConf, records, rpi, confStandings, conferences, isFinal, winnerOf, loserOf, regularSeasonDone, regSeasonChamp, regSeasonChamps, quadrants } from './standings.js?v=20261117182452';
-import { generatePoll } from './polls.js?v=20261117182452';
-import { hashStr } from './util.js?v=20261117182452';
+import { blankGame, DAY_ORDER } from './schedule.js?v=20261117224854';
+import { sameConf, records, rpi, confStandings, conferences, isFinal, winnerOf, loserOf, regularSeasonDone, regSeasonChamp, regSeasonChamps, quadrants } from './standings.js?v=20261117224854';
+import { generatePoll } from './polls.js?v=20261117224854';
+import { hashStr } from './util.js?v=20261117224854';
 
 // ---------- tournament format ----------
 
@@ -37,14 +37,20 @@ export function ncaaConfig(season) {
   return { ...DEFAULT_NCAA, ...(season.post?.cfg || season.settings?.ncaa || {}) };
 }
 
-// The national seed shown for a team: only the regional hosts (the top
-// national seeds, one per regional) carry a national seed on screen. Inside a
-// regional every team shows its regional seed instead (regionalSeed).
+// A team's seed inside its regional, 1 to the regional's size.
 export function regionalSeed(season, team) {
   const ev = season.post?.regionals?.find(e => e.seeds.includes(team));
   return ev ? ev.seeds.indexOf(team) + 1 : null;
 }
+// The seed shown for a team in the national tournament: its regional seed,
+// kept all the way through (a 1 seed is a 1 seed at the finals, whatever
+// regional it came from; the owner's rule, Nov. 2026). With no regionals, the
+// national seed.
 export function shownSeed(season, team) {
+  return regionalSeed(season, team) ?? shownNationalSeed(season, team);
+}
+// The national seed on screen: only the top national seeds carry one.
+export function shownNationalSeed(season, team) {
   const p = season.post;
   const f = p?.field?.find(x => x.team === team), cfg = ncaaConfig(season);
   return f && f.seed <= (noRegionals(cfg) ? cfg.wsSize : cfg.regionals) ? f.seed : null;
