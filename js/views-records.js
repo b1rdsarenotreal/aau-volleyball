@@ -1,9 +1,9 @@
 // Records page: the dynasty's record book.
 
-import { ctx, app, $$, esc, team, seasonLabel } from './ui.js?v=20261122194608';
-import { recordBook, top, pollRecords } from './records.js?v=20261122194608';
-import { coachName, weekName } from './league.js?v=20261122194608';
-import { fmtPct } from './util.js?v=20261122194608';
+import { ctx, app, $$, esc, team, seasonLabel } from './ui.js?v=20261122200748';
+import { recordBook, top, pollRecords } from './records.js?v=20261122200748';
+import { coachName, weekName } from './league.js?v=20261122200748';
+import { fmtPct } from './util.js?v=20261122200748';
 
 const ui = { programSort: 'w', pollSort: 'ranked' };
 

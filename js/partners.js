@@ -15,8 +15,8 @@
 // conference. The schedule uses them when each team plays everyone at least
 // once and at most twice; otherwise it falls back to the plain round robin.
 
-import { cityPoint, miles } from './geo.js?v=20261122194608';
-import { shuffle } from './util.js?v=20261122194608';
+import { cityPoint, miles } from './geo.js?v=20261122200748';
+import { shuffle } from './util.js?v=20261122200748';
 
 const KEY = (a, b) => (a < b ? `${a}|${b}` : `${b}|${a}`);
 
