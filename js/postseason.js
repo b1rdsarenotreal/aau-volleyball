@@ -2,7 +2,7 @@
 // or a play-in round then double elimination; most volleyball conferences
 // have none), then an NCAA tournament whose shape comes from the season's
 // settings. Every NCAA round is a single match:
-//   - regionals: `regionals` sites of `perRegional` teams (2 to 8), single
+//   - regionals: `regionals` sites of `perRegional` teams (2 to 16), single
 //     elimination, each hosted by its top seed; teams carry a regional seed
 //     (1 to perRegional) inside their regional,
 //   - super regionals (one match) between two regional winners when there
@@ -13,10 +13,10 @@
 // supers and mcws. The format is locked into the season when the field is
 // announced.
 
-import { blankGame, DAY_ORDER } from './schedule.js?v=20261122203738';
-import { sameConf, records, rpi, confStandings, conferences, isFinal, winnerOf, loserOf, regularSeasonDone, regSeasonChamp, regSeasonChamps, quadrants } from './standings.js?v=20261122203738';
-import { generatePoll } from './polls.js?v=20261122203738';
-import { hashStr } from './util.js?v=20261122203738';
+import { blankGame, DAY_ORDER } from './schedule.js?v=20261123011258';
+import { sameConf, records, rpi, confStandings, conferences, isFinal, winnerOf, loserOf, regularSeasonDone, regSeasonChamp, regSeasonChamps, quadrants } from './standings.js?v=20261123011258';
+import { generatePoll } from './polls.js?v=20261123011258';
+import { hashStr } from './util.js?v=20261123011258';
 
 // ---------- tournament format ----------
 
@@ -66,7 +66,7 @@ export function ncaaProblems(cfg, teamCount) {
   }
   if (![4, 8].includes(cfg.wsSize)) out.push('The Final Four must have 4 or 8 teams.');
   if (cfg.regionals !== cfg.wsSize && cfg.regionals !== cfg.wsSize * 2) out.push(`With ${cfg.wsSize} teams at the finals there must be ${cfg.wsSize} regionals (winners go straight to the finals) or ${cfg.wsSize * 2} (winners meet in super regionals).`);
-  if (!(cfg.perRegional >= 2 && cfg.perRegional <= 8)) out.push('Each regional needs 2 to 8 teams.');
+  if (!(cfg.perRegional >= 2 && cfg.perRegional <= 16)) out.push('Each regional needs 2 to 16 teams.');
   if (fieldSize(cfg) > teamCount) out.push(`That's ${fieldSize(cfg)} teams, but there are only ${teamCount} teams.`);
   return out;
 }
@@ -232,7 +232,12 @@ export function regionalFirstRound(size) {
 function regionalNodes(size) {
   const nodes = endOn(singleElim(size), 'Sat');
   const last = Math.max(...nodes.map(n => +n.key.split('-')[0].slice(1)));
-  for (const n of nodes) { const [r, k] = n.key.slice(1).split('-').map(Number); n.label = `${['First', 'Second', 'Third', 'Fourth'][r - 1] || `Round ${r}`} round`; n.code = r === last ? 'Regional final' : `${n.label} · Match ${k}`; }
+  for (const n of nodes) {
+    const [r, k] = n.key.slice(1).split('-').map(Number);
+    // With 16 to a regional (four rounds) the last two are named.
+    n.label = r === last && last >= 4 ? 'Regional final' : r === last - 1 && last >= 4 ? 'Regional semifinal' : `${['First', 'Second', 'Third', 'Fourth'][r - 1] || `Round ${r}`} round`;
+    n.code = r === last ? 'Regional final' : `${n.label} · Match ${k}`;
+  }
   return nodes;
 }
 function endOn(nodes, last) {

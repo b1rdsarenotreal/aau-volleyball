@@ -325,6 +325,19 @@ check('NCAA format checks', () => {
 s.settings.confTourney = { 'Ivy League': 4 };
 
 simGames(s, g => g.type === 'regular');
+check('16 teams a region: a 64-team field plays through to a champion', () => {
+  assert.deepEqual(ncaaProblems({ regionals: 4, perRegional: 16, wsSize: 4 }, 72), []);
+  assert.ok(ncaaProblems({ regionals: 4, perRegional: 17, wsSize: 4 }, 90).length);
+  const L = newLeague({ side: 'women' }), s = currentSeason(L);
+  s.settings.ncaa = { ...(s.settings.ncaa || {}), regionals: 4, perRegional: 16, wsSize: 4 };
+  simGames(s, () => true, { autoLock: true });
+  assert.equal(s.phase, 'complete');
+  assert.equal(s.post.field.length, 64);
+  assert.equal(s.games.filter(g => g.type === 'regional').length, 60);
+  const labels = new Set(s.post.regionals[0].nodes.map(n => n.label));
+  assert.ok(labels.has('Regional final') && labels.has('Regional semifinal'), [...labels].join(', '));
+});
+
 check('regular season results', () => {
   assert.ok(reg.every(isFinal));
   const recs = records(s), r = rpi(s);

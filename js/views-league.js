@@ -1,20 +1,20 @@
 // League pages: teams, team profiles, conferences, history, settings.
 
-import { readAauLogos, applyAauLogos, DEFAULT_LOGOS } from './logo-import.js?v=20261122203738';
-import { AAU_SCHOOLS, AAU_CONFERENCES, AAU_PROGRAMS } from './aau-schools.js?v=20261122203738';
-import { realignmentFor, applyRealignment, skipRealignment, JOIN_RATING, onRealignmentLoaded } from './realign.js?v=20261122203738';
-import { ctx, S, app, modal, $, $$, esc, toast, changed, persist, flushSave, cache, team, teamInfo, logoImg, teamOptions, teamHref, confLogo, confHref, confInfo, confColor, imageFileToDataUrl, readableOn, openGame, resultText, seasonLabel, seasonSpan } from './ui.js?v=20261122203738';
-import { isFinal, winnerOf, records, rpi, confStandings, regSeasonChamp, regSeasonChamps, isIndependent } from './standings.js?v=20261122203738';
-import { ovr } from './sim.js?v=20261122203738';
-import { latestPoll, pollRankMap, pollSizeOf, POLL_SIZES, DEFAULT_POLL_SIZE } from './polls.js?v=20261122203738';
-import { addTeam, removeTeam, renameTeam, addConference, renameConference, deleteConference, rebuildSchedule, startNextSeason, weekName, newLeague, beginOffseason, draftRemoveTeam, draftRestoreTeam, draftWarnings, coachName, coachSchool, hireCoach, newCoach, availableCoaches, backfillHitsErrors, placeRemaining, clearPoints, pointsLeft, migrateLeague, applyAlignment, canApplyAlignment, syncCoachBonus, devTotal, coachResumes, coachPrestige, prestigeLabel, coachBonus, programPrestiges, programLabel, fitLabel } from './league.js?v=20261122203738';
-import { hotSeat, HEAT } from './hotseat.js?v=20261122203738';
-import { setRating } from './ratings.js?v=20261122203738';
-import { confFormatName, postseasonFinish, postseasonDetail, postseasonRecord, wsTeams, postWeeks, regWeeksOf, ncaaConfig, ncaaProblems, fieldSize, hasSupers, formatSummary, proposeField, DEFAULT_NCAA, mcwsVenue, allEvents, gameVenue } from './postseason.js?v=20261122203738';
-import { DEFAULT_TOURNEY_WEEKS, DEFAULT_REG_WEEKS, DEFAULT_CONF_MATCHES, DEFAULT_MAX_MATCHES } from './schedule.js?v=20261122203738';
-import { exportLeague, clearLeague } from './store.js?v=20261122203738';
-import { clamp, fmtPct } from './util.js?v=20261122203738';
-import { recordBook, teamPollHistory, headToHead } from './records.js?v=20261122203738';
+import { readAauLogos, applyAauLogos, DEFAULT_LOGOS } from './logo-import.js?v=20261123011258';
+import { AAU_SCHOOLS, AAU_CONFERENCES, AAU_PROGRAMS } from './aau-schools.js?v=20261123011258';
+import { realignmentFor, applyRealignment, skipRealignment, JOIN_RATING, onRealignmentLoaded } from './realign.js?v=20261123011258';
+import { ctx, S, app, modal, $, $$, esc, toast, changed, persist, flushSave, cache, team, teamInfo, logoImg, teamOptions, teamHref, confLogo, confHref, confInfo, confColor, imageFileToDataUrl, readableOn, openGame, resultText, seasonLabel, seasonSpan } from './ui.js?v=20261123011258';
+import { isFinal, winnerOf, records, rpi, confStandings, regSeasonChamp, regSeasonChamps, isIndependent } from './standings.js?v=20261123011258';
+import { ovr } from './sim.js?v=20261123011258';
+import { latestPoll, pollRankMap, pollSizeOf, POLL_SIZES, DEFAULT_POLL_SIZE } from './polls.js?v=20261123011258';
+import { addTeam, removeTeam, renameTeam, addConference, renameConference, deleteConference, rebuildSchedule, startNextSeason, weekName, newLeague, beginOffseason, draftRemoveTeam, draftRestoreTeam, draftWarnings, coachName, coachSchool, hireCoach, newCoach, availableCoaches, backfillHitsErrors, placeRemaining, clearPoints, pointsLeft, migrateLeague, applyAlignment, canApplyAlignment, syncCoachBonus, devTotal, coachResumes, coachPrestige, prestigeLabel, coachBonus, programPrestiges, programLabel, fitLabel } from './league.js?v=20261123011258';
+import { hotSeat, HEAT } from './hotseat.js?v=20261123011258';
+import { setRating } from './ratings.js?v=20261123011258';
+import { confFormatName, postseasonFinish, postseasonDetail, postseasonRecord, wsTeams, postWeeks, regWeeksOf, ncaaConfig, ncaaProblems, fieldSize, hasSupers, formatSummary, proposeField, DEFAULT_NCAA, mcwsVenue, allEvents, gameVenue } from './postseason.js?v=20261123011258';
+import { DEFAULT_TOURNEY_WEEKS, DEFAULT_REG_WEEKS, DEFAULT_CONF_MATCHES, DEFAULT_MAX_MATCHES } from './schedule.js?v=20261123011258';
+import { exportLeague, clearLeague } from './store.js?v=20261123011258';
+import { clamp, fmtPct } from './util.js?v=20261123011258';
+import { recordBook, teamPollHistory, headToHead } from './records.js?v=20261123011258';
 // Win or loss for a team (no ties in this sport).
 const resultFor = (g, t) => (winnerOf(g) === t ? 'W' : 'L');
 
@@ -1061,6 +1061,14 @@ function gamesEstimate(cs, cur) {
   return `${top - 3}–${top}`;
 }
 
+// Teams per region, 2 to 16 (the owner's ask, Nov. 2026), each with a line on
+// how it plays out.
+const PER_REGION_OPTIONS = Array.from({ length: 15 }, (_, i) => i + 2).map(n => {
+  const p2 = 2 ** Math.ceil(Math.log2(n)), byes = p2 - n, rounds = Math.log2(p2);
+  if (n === 2) return [n, '2: one match'];
+  if (n === 3) return [n, '3: the 1 seed waits for the 2-3 winner'];
+  return [n, `${n}: seeds 1–${n}, ${byes ? (byes === 1 ? 'the 1 seed waits a round' : `the top ${byes} seeds wait a round`) : `${rounds} rounds`}`];
+});
 export function renderSettings() {
   const L = ctx.league, s = S(), st = s.settings;
   const isCurrent = L.viewYear === L.currentYear;
@@ -1113,7 +1121,7 @@ export function renderSettings() {
         <label class="field">Format <select id="n-mode"><option value="reg" ${nc.regionals ? 'selected' : ''}>Regionals, then the finals site</option><option value="none" ${nc.regionals ? '' : 'selected'}>No regionals: the whole field at the finals site</option></select></label>
         ${nc.regionals ? `<label class="field">Finals site <select id="n-ws">${[[4, '4 teams: the Final Four (semifinals and final)'], [8, '8 teams: quarterfinals, semifinals and final']].map(([v, l]) => `<option value="${v}" ${nc.wsSize === v ? 'selected' : ''}>${l}</option>`).join('')}</select></label>
         <label class="field">Regionals <select id="n-reg">${[nc.wsSize, nc.wsSize * 2].map(v => `<option value="${v}" ${nc.regionals === v ? 'selected' : ''}>${v} regionals${v === nc.wsSize ? ': winners go straight to the finals' : `: winners meet in ${v / 2} super regionals`}</option>`).join('')}</select></label>
-        <label class="field">Teams per regional <select id="n-per">${[[2, '2: one match'], [3, '3: the 1 seed waits for the 2-3 winner'], [4, '4: seeds 1–4, two rounds'], [5, '5: seeds 1–5'], [6, '6: seeds 1–6, the 1 and 2 seeds wait a round'], [7, '7: seeds 1–7, the 1 seed waits a round'], [8, '8: seeds 1–8, three rounds']].map(([v, l]) => `<option value="${v}" ${nc.perRegional === v ? 'selected' : ''}>${l}</option>`).join('')}</select></label>`
+        <label class="field">Teams per regional <select id="n-per">${PER_REGION_OPTIONS.map(([v, l]) => `<option value="${v}" ${nc.perRegional === v ? 'selected' : ''}>${l}</option>`).join('')}</select></label>`
         : `<label class="field">Teams <select id="n-ws">${[[2, '2: one match for the title'], [3, '3: the 1 seed waits for the 2-3 winner'], [4, '4: semifinals and final'], [5, '5: the top 3 seeds wait a round'], [6, '6: the 1 and 2 seeds wait a round'], [7, '7: the 1 seed waits a round'], [8, '8: quarterfinals, semifinals and final']].map(([v, l]) => `<option value="${v}" ${nc.wsSize === v ? 'selected' : ''}>${l}</option>`).join('')}</select></label>`}
         <div class="kpis kpis-sm" style="margin:0"><div class="kpi"><div class="v">${fieldSize(nc)}</div><div class="l">Qualifiers</div></div><div class="kpi"><div class="v">${Object.keys(ctx.league.conferences).filter(c => !isIndependent(c) && Object.values(cur.teams).some(t => t.conference === c)).length}</div><div class="l">Automatic bids</div></div><div class="kpi"><div class="v">${Math.max(0, fieldSize(nc) - Object.keys(ctx.league.conferences).filter(c => !isIndependent(c) && Object.values(cur.teams).some(t => t.conference === c)).length)}</div><div class="l">At-large</div></div></div>
         <p class="small">${formatSummary(nc)}</p>

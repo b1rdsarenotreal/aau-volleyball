@@ -19,8 +19,8 @@ include this repo.)
 - Ratings are stored as `off`, `pit`, `def` and shown as ATK (attack), SRV
   (serving and passing), DEF (blocking and digging). OVR = 0.4/0.3/0.3.
 - Postseason stages keep the MCS internal names: `regionals` = regionals
-  (single elimination, 2–8 teams, each team with a regional seed 1–N shown
-  inside its regional), `supers` = super regionals (one match between two
+  (single elimination, 2–16 teams, Settings' Teams per regional; each
+  team with a regional seed 1–N shown inside its regional), `supers` = super regionals (one match between two
   regional winners), `mcws` = the Final Four. The owner chose the names
   Regional and Super Regional. User-facing text never says MCWS, series,
   innings, runs or hits.
